@@ -1,68 +1,207 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* ========== Theme Tokens ========== */
+:root{
+  --bg: #121212;
+  --panel: #181818;
+  --border: #2a2a2a;
+  --text: #eaeaea;
+  --muted: #a3a3a3;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --brand:   #5562ff;
+  --brand-2: #3943ff;
+  --brand-3: #2a32c9;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --radius: 12px;
+  --shadow: 0 6px 24px rgba(0,0,0,.25);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+* { box-sizing: border-box; }
 
-body {
+/* ========== Base Layout ========== */
+html, body, #root { height: 100%; }
+
+body{
   margin: 0;
-  display: flex;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  direction: rtl;
+  background: var(--bg);
+}
+
+/* ✨ Background image with a dim overlay
+   If your file is /public/bg.jpg, this path works in Vite: */
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
+    url("C:\Dev\project-tracker\client\public\bg.jpg") center / cover no-repeat fixed;
+  z-index: -1;
+  filter: saturate(.9);
+}
+
+/* Center the app */
+.page{
+  min-height: 100dvh;
+  display: grid;
   place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 24px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Main width constraint */
+.container{
+  width: 100%;
+  max-width: 900px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+/* Glass card wrapper for content */
+.glass{
+  background: rgba(24,24,24,.82);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(3px);
+  padding: 20px;
+}
+
+/* Generic card (used around tables etc.) */
+.card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  overflow: hidden; /* avoids hover bleed on rounded corners */
+}
+
+/* ========== Utilities ========== */
+.row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.spacer{ height: 16px; }
+
+.h1{
+  margin: 0 0 18px;
+  font-weight: 800;
+  font-size: clamp(26px, 4vw, 40px);
+  letter-spacing: .2px;
+}
+
+.muted{ color: var(--muted); }
+
+/* ========== Buttons ========== */
+.btn{
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #222;
+  color: var(--text);
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease, box-shadow .15s ease;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* All three main buttons share this primary style */
+.btn--primary{
+  background: var(--brand-2);
+  border-color: var(--brand-3);
+  color: var(--text);
+}
+
+.btn--primary:hover{
+  background: var(--brand);
+  border-color: var(--brand-2);
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 22px rgba(85,98,255,.35);
+}
+
+.btn--primary:active{
+  transform: translateY(0);
+  filter: brightness(.98);
+  box-shadow: none;
+}
+
+/* ========== Links ========== */
+.link{
+  color: #9bb0ff;
+  text-decoration: none;
+}
+.link:hover{ text-decoration: underline; }
+
+/* ========== Inputs ========== */
+.input{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 16px;
+  transition: border-color .15s ease;
+}
+.input:focus{
+  outline: none;
+  border-color: var(--brand);
+}
+
+/* ========== Tables ========== */
+.table{
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th, .table td{
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+.table th{
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Row hover: color the cells (works across browsers) */
+.table tbody tr td{
+  transition: background-color .12s ease;
+}
+.table tbody tr:hover td{
+  background-color: rgba(255,255,255,.06);
+}
+.table tbody tr{ cursor: pointer; }
+
+/* center helpers */
+.center { text-align: center; }
+.row.center { justify-content: center; }
+
+/* pretty back link */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease;
+}
+.back:hover {
+  background: rgba(255,255,255,.10);
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+.back:active { transform: translateY(0); }
+.back .arrow { font-size: 14px; opacity: .9; }
+
+/* centered page header with a side action (back) */
+.pageHeader{
+  position: relative;
+  margin-bottom: 12px;
+  text-align: center;        /* centers the title */
+}
+.pageHeader .h1{ margin: 0; }
+.pageHeader .back{
+  position: absolute;
+  inset-inline-start: 0;     /* “start” side (RTL-aware) */
+  top: 50%;
+  transform: translateY(-50%);
 }

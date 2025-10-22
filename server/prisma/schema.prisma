@@ -7,12 +7,36 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum ProjectStage {
+  CREATED
+  FIRST_CONTACT
+  FIRST_MEETING
+  QUOTE_SENT
+  ARCHIVED
+  SIGNED
+}
+
+enum ListKind {
+  NEGOTIATION
+  ARCHIVE
+  SIGNED
+}
+
 model Project {
-  id         Int      @id @default(autoincrement())
-  name       String
-  clientName String?
-  status     String   @default("New") // New | InProgress | Done
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int          @id @default(autoincrement())
+  name      String
+  developer String?
+  stage     ProjectStage @default(CREATED)
+  listKind  ListKind     @default(NEGOTIATION)
+
+  // Optional columns for the tables
+  standard   String?
+  units      Int?
+  scopeValue String?
+  startDate  DateTime?
+  execution  Int?
+  remaining  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
