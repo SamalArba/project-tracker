@@ -1,14 +1,22 @@
-import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
+import Negotiation from './pages/Negotiation'
+import Archive from './pages/Archive'
+import Signed from './pages/Signed'
+import NewProject from './pages/NewProject'
+import ProjectDetails from './pages/ProjectDetails';
+
 
 export default function App() {
   return (
-    <div className="page">                       {/* centers everything */}
-      <div className="container glass">          {/* nice glass panel */}
+    <div className="page">
+      <div className="container glass">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/list/negotiation" element={<Placeholder title="מסע ומתן" />} />
-          <Route path="/list/archive" element={<Placeholder title="ארכיון" />} />
-          <Route path="/list/signed" element={<Placeholder title="חתומים" />} />
+          <Route path="/list/negotiation" element={<Negotiation />} />
+          <Route path="/list/archive" element={<Archive />} />
+          <Route path="/list/signed" element={<Signed />} />
+          <Route path="/project/new" element={<NewProject />} />
+          <Route path="/project/:id" element={<ProjectDetails />} />
         </Routes>
       </div>
     </div>
@@ -21,39 +29,32 @@ function Home() {
     <>
       <h1 className="h1 center">מערכת מעקב פרויקטים</h1>
 
-      <div className="row center">
-        <button className="btn btn--primary" onClick={()=>nav('/list/negotiation')}>משא ומתן</button>
-        <button className="btn btn--primary" onClick={()=>nav('/list/signed')}>חתומים</button>
-        <button className="btn btn--primary" onClick={()=>nav('/list/archive')}>ארכיון</button>
-      
+      <div className="grid3">
+        <button className="btn btn--primary btn--block btn--lg" onClick={() => nav('/list/negotiation')}>
+          משא ומתן
+        </button>
+        <button className="btn btn--primary btn--block btn--lg" onClick={() => nav('/list/signed')}>
+          חתומים
+        </button>
+        <button className="btn btn--primary btn--block btn--lg" onClick={() => nav('/list/archive')}>
+          ארכיון
+        </button>
       </div>
 
       <div className="spacer" />
-      <p className="muted center">בחר רשימה כדי להמשיך. (כרגע תצוגות דמה — נבנה טבלאות בשלב הבא)</p>
+      <div className="spacer" />
 
-      <div style={{marginTop:12}} className="center">
-        <Link className="link" to="/list/negotiation">/list/negotiation</Link> ·{" "}
-        <Link className="link" to="/list/archive">/list/archive</Link> ·{" "}
-        <Link className="link" to="/list/signed">/list/signed</Link>
-      </div>
+      <button
+        className="btn btn--primary btn--block btn--lg"
+        onClick={() => nav('/project/new')}
+        aria-label="יצירת פרויקט חדש"
+      >
+        יצירת פרויקט חדש
+      </button>
+
+      <div className="spacer" />
+      <p className="muted center">בחר רשימה או צור פרויקט חדש.</p>
     </>
   )
 }
 
-function Placeholder({ title }: { title: string }) {
-  return (
-    <>
-      <div className="pageHeader">
-        <Link className="back" to="/">
-          <span className="arrow">←</span>
-          חזרה
-        </Link>
-        <h1 className="h1">{title}</h1>
-      </div>
-
-      <div className="glass">
-        כאן תבוא טבלת הפרויקטים של: <b>{title}</b>
-      </div>
-    </>
-  )
-}

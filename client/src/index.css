@@ -28,14 +28,14 @@ body{
 }
 
 /* ✨ Background image with a dim overlay
-   If your file is /public/bg.jpg, this path works in Vite: */
+   Put bg file at client/public/bg.jpg */
 body::before{
   content: "";
   position: fixed;
   inset: 0;
   background:
     linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
-    url("C:\Dev\project-tracker\client\public\bg.jpg") center / cover no-repeat fixed;
+    url("/bg.jpg") center / cover no-repeat fixed; /* root-relative so it works on nested routes */
   z-index: -1;
   filter: saturate(.9);
 }
@@ -45,23 +45,23 @@ body::before{
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 30px;
 }
 
-/* Main width constraint */
+/* Main width constraint (bigger per feedback) */
 .container{
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;  /* was 900px */
 }
 
-/* Glass card wrapper for content */
+/* Glass card wrapper for content (more padding per feedback) */
 .glass{
   background: rgba(24,24,24,.82);
   border: 1px solid rgba(255,255,255,.08);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   backdrop-filter: blur(3px);
-  padding: 20px;
+  padding: 42px;     /* was 20px */
 }
 
 /* Generic card (used around tables etc.) */
@@ -77,6 +77,8 @@ body::before{
 /* ========== Utilities ========== */
 .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
 .spacer{ height: 16px; }
+.center { text-align: center; }
+.row.center { justify-content: center; }
 
 .h1{
   margin: 0 0 18px;
@@ -86,6 +88,42 @@ body::before{
 }
 
 .muted{ color: var(--muted); }
+
+/* prettier “back” pill link */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease;
+}
+.back:hover {
+  background: rgba(255,255,255,.10);
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+.back:active { transform: translateY(0); }
+.back .arrow { font-size: 14px; opacity: .9; }
+
+/* centered page header with side action */
+.pageHeader{
+  position: relative;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.pageHeader .h1{ margin: 0; }
+.pageHeader .back{
+  position: absolute;
+  inset-inline-start: 0; /* RTL-aware */
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 /* ========== Buttons ========== */
 .btn{
@@ -98,13 +136,12 @@ body::before{
   transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease, box-shadow .15s ease;
 }
 
-/* All three main buttons share this primary style */
+/* All main buttons same base color */
 .btn--primary{
   background: var(--brand-2);
   border-color: var(--brand-3);
   color: var(--text);
 }
-
 .btn--primary:hover{
   background: var(--brand);
   border-color: var(--brand-2);
@@ -112,11 +149,24 @@ body::before{
   filter: brightness(1.06);
   box-shadow: 0 6px 22px rgba(85,98,255,.35);
 }
-
 .btn--primary:active{
   transform: translateY(0);
   filter: brightness(.98);
   box-shadow: none;
+}
+
+/* equal-size, large buttons for the home grid */
+.btn--block{
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.btn--lg{
+  font-size: 20px;
+  padding: 18px 22px;
+  min-height: 56px;
 }
 
 /* ========== Links ========== */
@@ -157,7 +207,7 @@ body::before{
   font-weight: 600;
 }
 
-/* Row hover: color the cells (works across browsers) */
+/* Row hover: color the cells */
 .table tbody tr td{
   transition: background-color .12s ease;
 }
@@ -166,42 +216,67 @@ body::before{
 }
 .table tbody tr{ cursor: pointer; }
 
-/* center helpers */
-.center { text-align: center; }
-.row.center { justify-content: center; }
+/* ========== Grids ========== */
+/* 3 equal columns for home buttons; stacks on small screens */
+.grid3{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+@media (max-width: 780px){
+  .grid3{ grid-template-columns: 1fr; }
+}
 
-/* pretty back link */
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.06);
-  color: var(--text);
-  text-decoration: none;
-  transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease;
-}
-.back:hover {
-  background: rgba(255,255,255,.10);
-  border-color: var(--brand);
-  transform: translateY(-2px);
-  filter: brightness(1.03);
-}
-.back:active { transform: translateY(0); }
-.back .arrow { font-size: 14px; opacity: .9; }
+.spacer-lg{ height: 24px; }
 
-/* centered page header with a side action (back) */
-.pageHeader{
-  position: relative;
-  margin-bottom: 12px;
-  text-align: center;        /* centers the title */
+.form { display: grid; gap: 12px; }
+.grid2 { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+@media (max-width: 780px){ .grid2 { grid-template-columns: 1fr; } }
+
+.label { font-size: 14px; color: var(--muted); margin-bottom: 4px; display: block; }
+.helper { font-size: 12px; color: var(--muted); }
+
+.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.error { color: #ff9b9b; font-size: 14px; }
+
+/* Wider container + a bit more padding */
+.container{ max-width: 1500px;}   /* was 1200 */
+.glass{ padding: 40px; }           /* was 32 */
+
+/* Slightly larger headings & buttons (optional) */
+.h1{ font-size: clamp(28px, 4.6vw, 44px); }
+.btn--lg{ font-size: 22px; min-height: 60px; padding: 20px 24px; }
+
+/* chips (inline fact pills) */
+.chips { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 16px; }
+.chip {
+  display:inline-flex; gap:6px; align-items:center;
+  border:1px solid var(--border); border-radius:999px;
+  padding:6px 10px; background: rgba(255,255,255,.04);
 }
-.pageHeader .h1{ margin: 0; }
-.pageHeader .back{
-  position: absolute;
-  inset-inline-start: 0;     /* “start” side (RTL-aware) */
-  top: 50%;
-  transform: translateY(-50%);
+.chip__label { color: var(--muted); font-size: 12px; }
+.chip__value { font-weight:600; font-size: 13px; }
+
+/* segmented control used to switch lists */
+.pageActions{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin:8px 0 12px; flex-wrap:wrap; }
+.seg{ display:inline-flex; background:#1b1b1b; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.seg__btn{
+  padding:10px 14px; background:transparent; border:0; color:var(--text); cursor:pointer;
 }
+.seg__btn.is-active{ background: var(--brand-2); }
+
+/* section titles inside cards */
+.sectionTitle{ font-weight:700; margin-bottom:12px; }
+
+/* danger style */
+.btn--danger{
+  background: #c73c3c;
+  border-color: #9f2e2e;
+  color: #fff;
+}
+.btn--danger:hover{
+  background:#da4747; border-color:#c73c3c; transform: translateY(-2px);
+}
+
+.btn.is-loading { opacity: .7; pointer-events: none; }
