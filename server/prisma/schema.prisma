@@ -28,11 +28,11 @@ enum AssignmentStatus {
 }
 
 model Project {
-  id        Int           @id @default(autoincrement())
-  name      String
-  developer String?
-  listKind  ListKind      @default(NEGOTIATION)
-  status    ProjectStatus @default(ACTIVE)
+  id         Int           @id @default(autoincrement())
+  name       String
+  developer  String?
+  listKind   ListKind      @default(NEGOTIATION)
+  status     ProjectStatus @default(ACTIVE)
   standard   String?
   units      Int?
   scopeValue String?
@@ -41,21 +41,37 @@ model Project {
   remaining  String?
 
   assignments Assignment[]
+  contacts    Contact[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listKind, createdAt])
+  @@index([name])
+  @@index([developer])
+}
+
+model Assignment {
+  id           Int              @id @default(autoincrement())
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    Int
+  assigneeName String?
+  title        String
+  notes        String?
+  dueDate      DateTime?
+  status       AssignmentStatus @default(TODO)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Assignment {
-  id        Int     @id @default(autoincrement())
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+model Contact {
+  id        Int      @id @default(autoincrement())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
-  assigneeName String?
-  title   String
-  notes   String?
-  dueDate DateTime?
-  status  AssignmentStatus @default(TODO)
-
+  name      String
+  phone     String? // optional phone number; change to `String` (no ?) if you want required
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
 }
