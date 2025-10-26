@@ -192,30 +192,6 @@ body::before{
   border-color: var(--brand);
 }
 
-/* ========== Tables ========== */
-.table{
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th, .table td{
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-  text-align: right;
-}
-.table th{
-  color: var(--muted);
-  font-weight: 600;
-}
-
-/* Row hover: color the cells */
-.table tbody tr td{
-  transition: background-color .12s ease;
-}
-.table tbody tr:hover td{
-  background-color: rgba(255,255,255,.06);
-}
-.table tbody tr{ cursor: pointer; }
-
 /* ========== Grids ========== */
 /* 3 equal columns for home buttons; stacks on small screens */
 .grid3{

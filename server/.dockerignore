@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+dist
+*.test.ts
+.idea
+.vscode
+*.md
+*.env*
+*.iml
+.prisma
+migrations

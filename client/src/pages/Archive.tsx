@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Table } from '../components/Table'
+import { Table } from '../components/table/Table'
 
 type ProjectRow = { id:number; name:string; developer?:string; scopeValue?:string }
 
