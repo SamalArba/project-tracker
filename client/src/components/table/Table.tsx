@@ -1,3 +1,5 @@
+import './table.css';
+
 type Col<T> = { key: keyof T | string; label: string; render?: (row: T) => React.ReactNode }
 
 export function Table<T>({ columns, rows, onRowClick }: {
