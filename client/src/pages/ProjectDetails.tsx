@@ -13,6 +13,12 @@ type Assignment = {
   dueDate: string | null; // ISO
 };
 
+type Contact = {
+  id: number;
+  name: string;
+  phone: string;
+  createdAt: string;
+};
 type Project = {
   id: number;
   name: string;
@@ -27,6 +33,7 @@ type Project = {
   remaining: string | null;
   createdAt: string;
   assignments: Assignment[];
+  contacts: Contact[];
 };
 
 export default function ProjectDetails() {
@@ -56,6 +63,10 @@ export default function ProjectDetails() {
   const [aDue,   setADue]   = useState("");
   const [aNotes, setANotes] = useState("");
   const [busy,   setBusy]   = useState(false);
+  // contacts
+  const [cName,  setCName]  = useState("");
+  const [cPhone, setCPhone] = useState("");
+  const [cBusy,  setCBusy]  = useState(false);
 
   // list move feedback
   const [moving, setMoving] = useState<ListKind | null>(null);
@@ -84,11 +95,30 @@ export default function ProjectDetails() {
 
   useEffect(() => { load(); }, [pid]);
 
+  // Debounced auto-calc remaining from scopeValue and execution (always updates)
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      const rawScope = fScope.trim();
+      const numericScope = rawScope
+        ? Number(rawScope.replace(/[^0-9]/g, ''))
+        : NaN;
+      const e = fExec === "" ? NaN : Number(fExec);
+      if (Number.isFinite(numericScope) && Number.isFinite(e)) {
+        const rem = Math.max(0, Math.round(numericScope * e / 100));
+        const next = String(rem);
+        if (next !== fRem) setFRem(next);
+      }
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [fScope, fExec, fRem]);
+
   const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleDateString() : "—";
 
   // move project between lists with feedback
   const changeList = async (kind: ListKind) => {
     if (!project) return;
+    const label = kind === "NEGOTIATION" ? "משא ומתן" : kind === "SIGNED" ? "חתומים" : "ארכיון";
+    if (!confirm(`האם אתה בטוח שברצונך להעביר ל${label}?`)) return;
     setMoving(kind);
     try {
       const res = await fetch(`/api/projects/${project.id}`, {
@@ -158,6 +188,37 @@ export default function ProjectDetails() {
       alert("שגיאה בהוספת משימה: " + (e?.message || e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const addContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!project || !cName.trim() || !cPhone.trim()) return;
+    setCBusy(true);
+    try {
+      const res = await fetch(`/api/projects/${project.id}/contacts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cName.trim(), phone: cPhone.trim() })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      await load();
+      setCName(""); setCPhone("");
+    } catch (e:any) {
+      alert("שגיאה בהוספת איש קשר: " + (e?.message || e));
+    } finally {
+      setCBusy(false);
+    }
+  };
+
+  const deleteContact = async (contactId: number) => {
+    if (!confirm("למחוק את איש הקשר?")) return;
+    try {
+      const res = await fetch(`/api/contacts/${contactId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      await load();
+    } catch (e:any) {
+      alert("שגיאה במחיקת איש קשר: " + (e?.message || e));
     }
   };
 
@@ -298,6 +359,14 @@ export default function ProjectDetails() {
 
         <div className="grid2">
           <div>
+            <label className="label">תאריך הוספה למערכת</label>
+            <input className="input" value={fmt(project.createdAt)} readOnly />
+          </div>
+          <div></div>
+        </div>
+
+        <div className="grid2">
+          <div>
             <label className="label">ביצוע (%)</label>
             <input className="input" type="number" min={0} max={100} value={fExec}
                    onChange={e=>setFExec(e.target.value)} />
@@ -319,9 +388,11 @@ export default function ProjectDetails() {
         </div>
       </form>
 
-      {/* ===== add assignment ===== */}
+      {/* ===== assignments section (creation + list together) ===== */}
       <div className="card">
-        <h3 className="h3" style={{ marginTop: 0 }}>הוספת משימה</h3>
+        <h3 className="h3" style={{ marginTop: 0 }}>משימות</h3>
+        <div style={{ marginBottom: 16 }}>
+          <h4 className="h4" style={{ marginTop: 0, marginBottom: 12 }}>הוספת משימה</h4>
         <form className="form" onSubmit={addAssignment}>
           <div>
             <label className="label">כותרת *</label>
@@ -346,47 +417,90 @@ export default function ProjectDetails() {
             <button type="submit" className="btn btn--primary" disabled={busy || !aTitle.trim()}>הוספה</button>
           </div>
         </form>
+        </div>
+
+        {/* Assignments table */}
+        <table className="table">
+          <thead>
+            <tr>
+              <th>כותרת</th>
+              <th>שם מטפל</th>
+              <th>יעד</th>
+              <th>הערות</th>
+              <th>נוצר</th>
+              <th className="cell-actions"></th> {/* delete button column - last in RTL = left side */}
+            </tr>
+          </thead>
+          <tbody>
+            {project.assignments.map(a => (
+              <tr key={a.id}>
+                <td>{a.title}</td>
+                <td>{a.assigneeName || "—"}</td>
+                <td>{fmt(a.dueDate)}</td>
+                <td>{a.notes || "—"}</td>
+                <td>{fmt(a.createdAt)}</td>
+                <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn--danger"
+                    onClick={() => deleteAssignment(a.id)}
+                    title="מחיקת משימה"
+                  >
+                    מחיקה
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {project.assignments.length === 0 && (
+              <tr><td colSpan={6} className="muted">אין משימות כרגע</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* ===== assignments table ===== */}
+      {/* ===== contacts section (last) ===== */}
       <div className="card">
-        <h3 className="h3" style={{ marginTop: 0 }}>משימות</h3>
-        <table className="table">
-  <thead>
-    <tr>
-      <th>כותרת</th>
-      <th>שם מטפל</th>
-      <th>יעד</th>
-      <th>הערות</th>
-      <th>נוצר</th>
-      <th></th> {/* actions */}
-    </tr>
-  </thead>
-  <tbody>
-    {project.assignments.map(a => (
-      <tr key={a.id}>
-        <td>{a.title}</td>
-        <td>{a.assigneeName || "—"}</td>
-        <td>{fmt(a.dueDate)}</td>
-        <td>{a.notes || "—"}</td>
-        <td>{fmt(a.createdAt)}</td>
-        <td>
-          <button
-            type="button"
-            className="btn btn--danger"
-            onClick={() => deleteAssignment(a.id)}
-            title="מחיקת משימה"
-          >
-            מחיקה
-          </button>
-        </td>
-      </tr>
-    ))}
-    {project.assignments.length === 0 && (
-      <tr><td colSpan={6} className="muted">אין משימות כרגע</td></tr>
-    )}
-     </tbody>
-     </table>
+        <h3 className="h3" style={{ marginTop: 0 }}>אנשי קשר</h3>
+        <form className="form" onSubmit={addContact}>
+          <div className="grid2">
+            <div>
+              <label className="label">שם *</label>
+              <input className="input" value={cName} onChange={e=>setCName(e.target.value)} />
+            </div>
+            <div>
+              <label className="label">טלפון *</label>
+              <input className="input" value={cPhone} onChange={e=>setCPhone(e.target.value)} />
+            </div>
+          </div>
+          <div className="actions">
+            <button type="submit" className="btn btn--primary" disabled={cBusy || !cName.trim() || !cPhone.trim()}>הוספה</button>
+          </div>
+        </form>
+        <table className="table" style={{ marginTop: 12 }}>
+          <thead>
+            <tr>
+              <th>שם</th>
+              <th>טלפון</th>
+              <th>נוצר</th>
+              <th className="cell-actions"></th> {/* delete button column - last in RTL = left side */}
+            </tr>
+          </thead>
+          <tbody>
+            {project.contacts.map(c => (
+              <tr key={c.id}>
+                <td>{c.name}</td>
+                <td>{c.phone}</td>
+                <td>{fmt(c.createdAt)}</td>
+                <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                  <button type="button" className="btn btn--danger" onClick={() => deleteContact(c.id)}>מחיקה</button>
+                </td>
+              </tr>
+            ))}
+            {project.contacts.length === 0 && (
+              <tr><td colSpan={4} className="muted">לא נוספו אנשי קשר</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </>
   );
