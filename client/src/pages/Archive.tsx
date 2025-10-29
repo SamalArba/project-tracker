@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
 
-type ProjectRow = { id:number; name:string; developer?:string; scopeValue?:string }
+type ProjectRow = { id:number; name:string; developer?:string; scopeValue?:string; units: number | null; createdAt: string }
 
 export default function Archive() {
   const [rows, setRows] = useState<ProjectRow[]>([])
@@ -16,6 +16,7 @@ export default function Archive() {
   const filtered = rows.filter(r =>
     (r.name ?? '').includes(q) || (r.developer ?? '').includes(q) || (r.scopeValue ?? '').includes(q)
   )
+  const sorted = [...filtered].sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   return (
     <>
@@ -30,12 +31,13 @@ export default function Archive() {
 
       <Table<ProjectRow>
         columns={[
-          { key: 'name',       label: 'פרויקט' },
-          { key: 'developer',  label: 'יזם' },
+          { key: 'units', label: 'יח״ד', render: r => (r.units == null ? '—' : r.units) },
           { key: 'scopeValue', label: 'היקף' },
+          { key: 'createdAt', label: 'תאריך יצירה', render: r => new Date(r.createdAt).toLocaleDateString() },
         ]}
-        rows={filtered}
-        onRowClick={(row)=>console.log('clicked', row)}
+        rows={sorted}
+        getRowHref={(row)=>`/project/${row.id}`}
+        showNameDeveloper
       />
     </>
   )
