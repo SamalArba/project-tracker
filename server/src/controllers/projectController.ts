@@ -42,16 +42,20 @@ export async function listProjects(req: Request, res: Response) {
 export async function getProject(req: Request, res: Response) {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "bad id" });
-
-  const project = await prisma.project.findUnique({
-    where: { id },
-    include: {
-      assignments: { orderBy: { createdAt: "desc" } },
-      contacts: { orderBy: { createdAt: "desc" } },
-    } as any,
-  });
-  if (!project) return res.sendStatus(404);
-  res.json(project);
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        assignments: { orderBy: { createdAt: "desc" } },
+        contacts: { orderBy: { createdAt: "desc" } },
+      } as any,
+    });
+    if (!project) return res.sendStatus(404);
+    res.json(project);
+  } catch (err: any) {
+    console.error("GET /api/projects/:id error:", err);
+    res.status(500).json({ error: "failed_to_load_project" });
+  }
 }
 
 export async function patchProject(req: Request, res: Response) {

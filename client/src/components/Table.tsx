@@ -1,5 +1,5 @@
 type Col<T> = { key: keyof T | string; label: string; render?: (row: T) => React.ReactNode }
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export function Table<T>({ columns, rows, onRowClick, getRowHref, getRowClass, showNameDeveloper }: {
   columns: Col<T>[]
@@ -51,7 +51,16 @@ export function Table<T>({ columns, rows, onRowClick, getRowHref, getRowClass, s
               >
               {showNameDeveloper && (
                 <>
-                  <td>{(r as any).name}</td>
+                  <td>
+                    {href ? (
+                      <Link to={href} style={{ color: 'inherit', textDecoration: 'none', display: 'block' }}
+                            onClick={(e)=>{ e.preventDefault(); nav(href) }}>
+                        {(r as any).name}
+                      </Link>
+                    ) : (
+                      (r as any).name
+                    )}
+                  </td>
                   <td>{(r as any).developer ?? '—'}</td>
                 </>
               )}
