@@ -5,8 +5,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum ListKind {
@@ -19,6 +19,7 @@ enum ProjectStatus {
   ACTIVE
   ON_HOLD
   COMPLETED
+  QUOTE_GIVEN
 }
 
 enum AssignmentStatus {

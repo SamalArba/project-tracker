@@ -236,7 +236,7 @@ export default function NewProject() {
                   <tr>
                     <th>שם</th>
                     <th>טלפון</th>
-                    <th></th>
+                    <th className="cell-actions"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,7 +244,7 @@ export default function NewProject() {
                     <tr key={i}>
                       <td>{c.name}</td>
                       <td>{c.phone}</td>
-                      <td>
+                      <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
                         <button type="button" className="btn btn--danger" onClick={() => removeContactFromList(i)}>הסר</button>
                       </td>
                     </tr>

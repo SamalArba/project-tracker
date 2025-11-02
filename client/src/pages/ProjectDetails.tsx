@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 type ListKind = "NEGOTIATION" | "SIGNED" | "ARCHIVE";
-type Status   = "ACTIVE" | "ON_HOLD" | "COMPLETED";
+ type Status   = "ACTIVE" | "ON_HOLD" | "COMPLETED" | "QUOTE_GIVEN";
 
 type Assignment = {
   id: number;
@@ -326,9 +326,10 @@ export default function ProjectDetails() {
           <div>
             <label className="label">סטטוס</label>
             <select className="input" value={fStatus} onChange={e=>setFStatus(e.target.value as Status)}>
-              <option value="ACTIVE">פעיל</option>
-              <option value="ON_HOLD">מושהה</option>
-              <option value="COMPLETED">הושלם</option>
+              <option value="ACTIVE">נוצר פרוייקט</option>
+              <option value="ON_HOLD">נוצר קשר ראשוני</option>
+              <option value="COMPLETED">בוצעה פגישה ראשונה</option>
+              <option value="QUOTE_GIVEN">ניתנה הצעת מחיר</option>
             </select>
           </div>
         </div>

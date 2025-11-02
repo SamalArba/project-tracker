@@ -56,7 +56,13 @@ export default function Negotiation() {
 
   const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('he-IL') : '—'
   const fmtStatus = (s: Row['status']) =>
-    s === 'ACTIVE' ? 'פעיל' : s === 'ON_HOLD' ? 'מושהה' : 'הושלם'
+    s === 'ACTIVE' ? 'נוצר פרוייקט'
+    : s === 'ON_HOLD' ? 'נוצר קשר ראשוני'
+    : s === 'COMPLETED' ? 'בוצעה פגישה ראשונה' : 'ניתנה הצעת מחיר'
+  const statusClass = (s: Row['status']) =>
+    s === 'ACTIVE' ? 'status--active'
+    : s === 'ON_HOLD' ? 'status--on-hold'
+    : s === 'COMPLETED' ? 'status--completed' : 'status--quote'
 
   return (
     <>
@@ -77,7 +83,9 @@ export default function Negotiation() {
         <Table<Row>
           columns={[
             { key: 'units', label: 'יח״ד', render: r => (r.units == null ? '—' : r.units) },
-            { key: 'status', label: 'סטטוס', render: r => fmtStatus(r.status) },
+            { key: 'status', label: 'סטטוס', render: r => (
+              <span className={`statusChip ${statusClass(r.status)}`}>{fmtStatus(r.status)}</span>
+            ) },
             { key: 'lastTaskTitle', label: 'משימה אחרונה', render: r => r.lastTaskTitle ?? '—' },
             { key: 'lastHandlerName', label: 'שם המטפל', render: r => r.lastHandlerName ?? '—' },
             { key: 'lastTaskDate', label: 'תאריך משימה', render: r => fmtDate(r.lastTaskDate) },

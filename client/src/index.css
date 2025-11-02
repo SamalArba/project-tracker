@@ -220,9 +220,44 @@ body::before{
 }
 .table tbody tr{ cursor: pointer; }
 
-/* Status coloring for Negotiation rows */
-.table tbody tr.row--overdue td{ background-color: rgba(199,60,60,.16); }
-.table tbody tr.row--soon td{ background-color: rgba(255,165,0,.16); }
+/* Status coloring only on the date column (last cell) in Negotiation */
+.table tbody tr.row--overdue td:last-child{ background-color: rgba(199,60,60,.16); }
+.table tbody tr.row--soon td:last-child{ background-color: rgba(255,165,0,.16); }
+
+/* Status chips */
+.statusChip{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  width: 200px;           /* unified width to fit longest Hebrew label */
+  text-align: center;
+  white-space: nowrap;     /* prevent wrap */
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+.status--active{        /* lightest blue */
+  background: rgba(170,205,255,.28);
+  border-color: #9cc3ff;
+  color: #eef4ff;
+}
+.status--on-hold{       /* medium blue */
+  background: rgba(100,150,255,.40);
+  border-color: #6e96ff;
+  color: #e5ecff;
+}
+.status--completed{     /* darkest blue */
+  background: rgba(50,95,255,.52);
+  border-color: #4a69ff;
+  color: #dfe6ff;
+}
+.status--quote{         /* extra darkest */
+  background: rgba(30,75,245,.60);
+  border-color: #274ee6;
+  color: #eaf0ff;
+}
 
 /* ========== Grids ========== */
 /* 3 equal columns for home buttons; stacks on small screens */
