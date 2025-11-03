@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
 type ListKind = 'NEGOTIATION' | 'ARCHIVE' | 'SIGNED'
@@ -22,6 +22,11 @@ export default function NewProject() {
   // initial assignment (optional)
   const [taskTitle, setTaskTitle] = useState('')
   const [taskAssigneeName, setTaskAssigneeName] = useState('')
+
+  // initial contacts (optional)
+  const [contactName, setContactName] = useState('')
+  const [contactPhone, setContactPhone] = useState('')
+  const [initialContacts, setInitialContacts] = useState<Array<{name: string, phone: string}>>([])
 
   // ui state
   const [saving, setSaving] = useState(false)
@@ -56,6 +61,10 @@ export default function NewProject() {
       }
     }
 
+    if (initialContacts.length > 0) {
+      payload.initialContacts = initialContacts
+    }
+
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
@@ -82,6 +91,34 @@ export default function NewProject() {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Debounced auto-calc remaining from scopeValue and execution (always updates)
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      const numericScope = scopeValue
+        ? Number(scopeValue.replace(/[^0-9]/g, ''))
+        : NaN
+      const e = typeof execution === 'number' ? execution : NaN
+      if (Number.isFinite(numericScope) && Number.isFinite(e)) {
+        const rem = Math.max(0, Math.round(numericScope * e / 100))
+        const next = String(rem)
+        if (next !== remaining) setRemaining(next)
+      }
+    }, 400)
+    return () => window.clearTimeout(handle)
+  }, [scopeValue, execution, remaining])
+
+  const addContactToList = () => {
+    if (contactName.trim() && contactPhone.trim()) {
+      setInitialContacts([...initialContacts, { name: contactName.trim(), phone: contactPhone.trim() }])
+      setContactName('')
+      setContactPhone('')
+    }
+  }
+
+  const removeContactFromList = (index: number) => {
+    setInitialContacts(initialContacts.filter((_, i) => i !== index))
   }
 
   return (
@@ -176,6 +213,47 @@ export default function NewProject() {
                    value={taskAssigneeName} onChange={e=>setTaskAssigneeName(e.target.value)} />
           </div>
           <div className="helper">אפשר להשאיר ריק — תמיד תוכלו להוסיף משימות מאוחר יותר</div>
+        </div>
+
+        {/* Initial contacts (optional) */}
+        <div className="card" style={{marginTop:8}}>
+          <h3 className="h3" style={{marginTop:0}}>אנשי קשר ראשוניים (אופציונלי)</h3>
+          <div className="grid2">
+            <input className="input" placeholder="שם"
+                   value={contactName} onChange={e=>setContactName(e.target.value)} />
+            <input className="input" placeholder="טלפון"
+                   value={contactPhone} onChange={e=>setContactPhone(e.target.value)} />
+          </div>
+          <div className="actions" style={{marginTop:8}}>
+            <button type="button" className="btn btn--primary" onClick={addContactToList} disabled={!contactName.trim() || !contactPhone.trim()}>
+              הוסף איש קשר
+            </button>
+          </div>
+          {initialContacts.length > 0 && (
+            <div style={{marginTop:12}}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>שם</th>
+                    <th>טלפון</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {initialContacts.map((c, i) => (
+                    <tr key={i}>
+                      <td>{c.name}</td>
+                      <td>{c.phone}</td>
+                      <td>
+                        <button type="button" className="btn btn--danger" onClick={() => removeContactFromList(i)}>הסר</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="helper">אפשר להשאיר ריק — תמיד תוכלו להוסיף אנשי קשר מאוחר יותר</div>
         </div>
 
         {!valid && <div className="error">שם פרויקט חובה, וביצוע (אם מולא) חייב להיות בין 0 ל-100.</div>}
