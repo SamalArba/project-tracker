@@ -43,6 +43,7 @@ model Project {
 
   assignments Assignment[]
   contacts    Contact[]
+  files       ProjectFile[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,6 +69,19 @@ model Contact {
   projectId Int
   name      String
   phone     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectFile {
+  id           Int     @id @default(autoincrement())
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    Int
+  originalName String
+  storedName   String  @unique
+  mimeType     String?
+  size         Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

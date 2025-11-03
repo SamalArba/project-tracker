@@ -10,7 +10,12 @@ import {
   getProject,
   listProjects,
   patchProject,
+  uploadFile,
+  listFiles,
+  downloadFile,
+  deleteFile,
 } from "../controllers/projectController";
+import upload from "../middleware/upload";
 
 export const router = Router();
 
@@ -25,5 +30,11 @@ router.delete("/projects/:id", deleteProject);
 router.post("/projects/:id/contacts", createContact);
 router.delete("/contacts/:id", deleteContact);
 router.delete("/assignments/:id", deleteAssignment);
+
+// File routes
+router.post("/projects/:id/files", upload.single("file"), uploadFile);
+router.get("/projects/:id/files", listFiles);
+router.get("/files/:fileId", downloadFile);
+router.delete("/files/:fileId", deleteFile);
 
 

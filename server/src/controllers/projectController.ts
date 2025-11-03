@@ -2,6 +2,25 @@ import { Request, Response } from "express";
 import { prisma } from "../models/prisma";
 import { createAssignmentSchema, createContactSchema, createProjectSchema, listParam, updateProjectSchema } from "../models/schemas";
 import { shapeProjectList } from "../views/projectView";
+import path from "path";
+import fs from "fs/promises";
+
+function decodeFilename(original: string): string {
+  // Try both the original and latin1->utf8 conversion; pick the one that "looks" better
+  const candidate1 = original;
+  let candidate2 = original;
+  try { candidate2 = Buffer.from(original, 'latin1').toString('utf8'); } catch {}
+  const score = (s: string) => {
+    let heb = 0, repl = 0;
+    for (const ch of s) {
+      const code = ch.charCodeAt(0);
+      if (code >= 0x0590 && code <= 0x05FF) heb++;
+      if (ch === '\uFFFD') repl++;
+    }
+    return heb * 10 - repl * 5 - (s.includes('Ã') || s.includes('×') ? 2 : 0);
+  };
+  return score(candidate2) > score(candidate1) ? candidate2 : candidate1;
+}
 
 export async function getHealth(_req: Request, res: Response) {
   res.json({ ok: true, service: "server", ts: new Date().toISOString() });
@@ -224,6 +243,95 @@ export async function deleteAssignment(req: Request, res: Response) {
   } catch (err: any) {
     console.error("Delete assignment error:", err);
     res.status(400).json({ error: "cannot_delete_assignment" });
+  }
+}
+
+// ==================== File Management ====================
+
+export async function uploadFile(req: Request, res: Response) {
+  const projectId = Number(req.params.id);
+  if (!Number.isFinite(projectId)) return res.status(400).json({ error: "bad id" });
+
+  if (!req.file) return res.status(400).json({ error: "no_file_uploaded" });
+
+  try {
+    const file = await (prisma as any).projectFile.create({
+      data: {
+        projectId,
+        originalName: decodeFilename(req.file.originalname),
+        storedName: req.file.filename,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+      },
+    });
+    res.status(201).json(file);
+  } catch (err: any) {
+    console.error("Upload file error:", err);
+    res.status(500).json({ error: "failed_to_upload_file" });
+  }
+}
+
+export async function listFiles(req: Request, res: Response) {
+  const projectId = Number(req.params.id);
+  if (!Number.isFinite(projectId)) return res.status(400).json({ error: "bad id" });
+
+  try {
+    const files = await (prisma as any).projectFile.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+    });
+    const shaped = files.map((f: any) => ({ ...f, originalName: decodeFilename(f.originalName) }));
+    res.json(shaped);
+  } catch (err: any) {
+    console.error("List files error:", err);
+    res.status(500).json({ error: "failed_to_list_files" });
+  }
+}
+
+export async function downloadFile(req: Request, res: Response) {
+  const fileId = Number(req.params.fileId);
+  if (!Number.isFinite(fileId)) return res.status(400).json({ error: "bad id" });
+
+  try {
+    const file = await (prisma as any).projectFile.findUnique({ where: { id: fileId } });
+    if (!file) return res.sendStatus(404);
+
+    const filePath = path.join(__dirname, "../../uploads", file.storedName);
+    const filename = decodeFilename(file.originalName);
+    const fallback = filename.replace(/[^\t\n\r\x20-\x7E]/g, '_');
+    const encoded = encodeURIComponent(filename);
+    res.setHeader('Content-Type', (file.mimeType as string) || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`);
+    res.sendFile(filePath);
+  } catch (err: any) {
+    console.error("Download file error:", err);
+    res.status(500).json({ error: "failed_to_download_file" });
+  }
+}
+
+export async function deleteFile(req: Request, res: Response) {
+  const fileId = Number(req.params.fileId);
+  if (!Number.isFinite(fileId)) return res.status(400).json({ error: "bad id" });
+
+  try {
+    const file = await (prisma as any).projectFile.findUnique({ where: { id: fileId } });
+    if (!file) return res.sendStatus(404);
+
+    const filePath = path.join(__dirname, "../../uploads", file.storedName);
+    
+    // Delete from disk
+    try {
+      await fs.unlink(filePath);
+    } catch (fsErr: any) {
+      console.warn("File not found on disk (may have been deleted manually):", fsErr.message);
+    }
+
+    // Delete from DB
+    await (prisma as any).projectFile.delete({ where: { id: fileId } });
+    res.sendStatus(204);
+  } catch (err: any) {
+    console.error("Delete file error:", err);
+    res.status(400).json({ error: "cannot_delete_file" });
   }
 }
 

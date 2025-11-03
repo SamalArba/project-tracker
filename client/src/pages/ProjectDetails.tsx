@@ -19,6 +19,14 @@ type Contact = {
   phone: string;
   createdAt: string;
 };
+
+type ProjectFile = {
+  id: number;
+  originalName: string;
+  size: number;
+  createdAt: string;
+};
+
 type Project = {
   id: number;
   name: string;
@@ -49,7 +57,14 @@ export default function ProjectDetails() {
   const [fName,   setFName]   = useState("");
   const [fDev,    setFDev]    = useState("");
   const [fStatus, setFStatus] = useState<Status>("ACTIVE");
-  const [fStd,    setFStd]    = useState("");
+  
+  const STANDARD_OPTIONS = [
+    "Comfort","Comfort +","Comfort +Glass",
+    "Smart 1","Smart 2","Smart 3",
+    "Prestige 4","Prestige 5","Prestige 6",
+  ];
+  const [stdSelected, setStdSelected] = useState<string[]>([]);
+  const [stdNote, setStdNote] = useState("");
   const [fUnits,  setFUnits]  = useState<string>("");
   const [fScope,  setFScope]  = useState("");
   const [fStart,  setFStart]  = useState(""); // yyyy-mm-dd
@@ -68,6 +83,11 @@ export default function ProjectDetails() {
   const [cPhone, setCPhone] = useState("");
   const [cBusy,  setCBusy]  = useState(false);
 
+  // files
+  const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+
   // list move feedback
   const [moving, setMoving] = useState<ListKind | null>(null);
   const [mToast, setMToast] = useState<string | null>(null);
@@ -82,7 +102,7 @@ export default function ProjectDetails() {
         setFName(p.name ?? "");
         setFDev(p.developer ?? "");
         setFStatus(p.status);
-        setFStd(p.standard ?? "");
+        setStdSelected(p.standard ? p.standard.split(',').map(s=>s.trim()).filter(Boolean) : []);
         setFUnits(p.units == null ? "" : String(p.units));
         setFScope(p.scopeValue ?? "");
         setFStart(p.startDate ? new Date(p.startDate).toISOString().slice(0,10) : "");
@@ -93,7 +113,14 @@ export default function ProjectDetails() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [pid]);
+  useEffect(() => { load(); loadFiles(); }, [pid]);
+
+  const loadFiles = () => {
+    fetch(`/api/projects/${pid}/files`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+      .then(setFiles)
+      .catch(e => console.error("Failed to load files:", e));
+  };
 
   // Debounced auto-calc remaining from scopeValue and execution (always updates)
   useEffect(() => {
@@ -137,15 +164,15 @@ export default function ProjectDetails() {
     }
   };
 
-  const saveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveDetails = async () => {
     if (!project) return;
 
     const patch: Record<string, any> = {};
     patch.name       = fName.trim() || undefined;
     patch.developer  = fDev.trim()   === "" ? null : fDev.trim();
     patch.status     = fStatus;
-    patch.standard   = fStd.trim()   === "" ? null : fStd.trim();
+    const stdCombined = stdSelected.join(', ');
+    patch.standard   = (stdCombined || stdNote.trim()) ? [stdCombined, stdNote.trim()].filter(Boolean).join(', ') : null;
     patch.units      = fUnits === "" ? null : Number(fUnits);
     patch.scopeValue = fScope.trim() === "" ? null : fScope.trim();
     patch.startDate  = fStart ? new Date(fStart) : null;
@@ -233,6 +260,74 @@ export default function ProjectDetails() {
   }
 };
 
+  const uploadFiles = async (fileList: FileList) => {
+    if (!project) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(fileList)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/projects/${project.id}/files`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) throw new Error(await res.text());
+      }
+      await loadFiles();
+    } catch (e: any) {
+      alert("שגיאה בהעלאת קובץ: " + (e?.message || e));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await uploadFiles(e.target.files);
+      e.target.value = ""; // reset input
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await uploadFiles(e.dataTransfer.files);
+    }
+  };
+
+  const deleteFile = async (fileId: number) => {
+    if (!confirm("למחוק את הקובץ?")) return;
+    try {
+      const res = await fetch(`/api/files/${fileId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      await loadFiles();
+    } catch (e: any) {
+      alert("שגיאה במחיקת קובץ: " + (e?.message || e));
+    }
+  };
+
+  const downloadFile = (fileId: number, fileName: string) => {
+    // Create a temporary link to force download
+    const link = document.createElement('a');
+    link.href = `/api/files/${fileId}`;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
   const deleteProject = async () => {
     if (!project) return;
@@ -276,9 +371,11 @@ export default function ProjectDetails() {
         <h1 className="h1">{project.name}</h1>
       </div>
 
-      {/* ===== move between lists (feedback) ===== */}
-      <div className="card">
-        <div className="row" style={{ gap: 8, alignItems: "center" }}>
+      {/* Big container wrapping all sections, like NewProject */}
+      <div className="card form">
+        {/* ===== move between lists (feedback) ===== */}
+        <div className="card mt0">
+        <div className="row gap8">
           <button
             type="button"
             className={`btn ${project.listKind === "NEGOTIATION" ? "btn--primary" : ""} ${moving === "NEGOTIATION" ? "is-loading" : ""}`}
@@ -287,7 +384,6 @@ export default function ProjectDetails() {
           >
             {moving === "NEGOTIATION" ? "מעביר…" : "משא ומתן"}
           </button>
-
           <button
             type="button"
             className={`btn ${project.listKind === "SIGNED" ? "btn--primary" : ""} ${moving === "SIGNED" ? "is-loading" : ""}`}
@@ -296,7 +392,6 @@ export default function ProjectDetails() {
           >
             {moving === "SIGNED" ? "מעביר…" : "חתומים"}
           </button>
-
           <button
             type="button"
             className={`btn ${project.listKind === "ARCHIVE" ? "btn--primary" : ""} ${moving === "ARCHIVE" ? "is-loading" : ""}`}
@@ -305,20 +400,17 @@ export default function ProjectDetails() {
           >
             {moving === "ARCHIVE" ? "מעביר…" : "ארכיון"}
           </button>
-
           <div style={{ flex: 1 }} />
           {mToast && <div className="muted">{mToast}</div>}
         </div>
-      </div>
-
-      {/* ===== always-editable details ===== */}
-      <form className="card form" onSubmit={saveEdit}>
-        <div>
-          <label className="label">שם פרוייקט *</label>
-          <input className="input" value={fName} onChange={e=>setFName(e.target.value)} />
         </div>
 
-        <div className="grid2">
+        {/* ===== always-editable details ===== */}
+        <div className="card card--compact mt8 form form--md">
+        <h3 className="h3 mt0">פרטי פרויקט</h3>
+          <label className="label">שם פרויקט</label>
+          <input className="input" value={fName} onChange={e=>setFName(e.target.value)} />
+        <div className="grid2 mt14">
           <div>
             <label className="label">יזם</label>
             <input className="input" value={fDev} onChange={e=>setFDev(e.target.value)} />
@@ -333,39 +425,33 @@ export default function ProjectDetails() {
             </select>
           </div>
         </div>
+        
 
-        <div className="grid2">
-          <div>
-            <label className="label">סטנדרט</label>
-            <input className="input" value={fStd} onChange={e=>setFStd(e.target.value)} />
-          </div>
-          <div>
-            <label className="label">יח״ד</label>
-            <input className="input" type="number" min={0} value={fUnits}
-                   onChange={e=>setFUnits(e.target.value)} />
-          </div>
-        </div>
-
-        <div className="grid2">
-          <div>
-            <label className="label">היקף</label>
-            <input className="input" value={fScope} onChange={e=>setFScope(e.target.value)} />
-          </div>
+        {/* Dates */}
+        <div className="grid2 mt14">
           <div>
             <label className="label">תאריך התחלה</label>
             <input className="input" type="date" value={fStart}
                    onChange={e=>setFStart(e.target.value)} />
           </div>
-        </div>
-
-        <div className="grid2">
           <div>
             <label className="label">תאריך הוספה למערכת</label>
             <input className="input" value={fmt(project.createdAt)} readOnly />
           </div>
-          <div></div>
         </div>
 
+        {/* Quantities & scope */}
+        <div className="grid2 mt14">
+          <div>
+            <label className="label">יח״ד</label>
+            <input className="input" type="number" min={0} value={fUnits}
+                   onChange={e=>setFUnits(e.target.value)} />
+          </div>
+          <div>
+            <label className="label">היקף</label>
+            <input className="input" value={fScope} onChange={e=>setFScope(e.target.value)} />
+          </div>
+        </div>
         <div className="grid2">
           <div>
             <label className="label">ביצוע (%)</label>
@@ -378,22 +464,36 @@ export default function ProjectDetails() {
           </div>
         </div>
 
-        <div className="row" style={{ gap: 8 }}>
-          <div style={{ flex: 1 }} />
-          <button type="submit" className="btn btn--primary" disabled={saving || !fName.trim()}>
-            {saving ? "שומר…" : "שמירה"}
-          </button>
-          <button type="button" className="btn btn--danger" onClick={deleteProject} disabled={busy}>
-            מחיקת פרויקט
-          </button>
+        {/* Standard at bottom, unwrapped */}
+        <div className="mt14">
+          <label className="label">סטנדרט (ניתן לבחור כמה)</label>
+          <div className="row gap8">
+            {STANDARD_OPTIONS.map(opt => {
+              const active = stdSelected.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  className={`btn ${active ? 'btn--primary' : ''}`}
+                  onClick={() => setStdSelected(active ? stdSelected.filter(o=>o!==opt) : [...stdSelected, opt])}
+                  style={{padding:'6px 10px'}}
+                >{opt}</button>
+              );
+            })}
+          </div>
+          <div className="mt12">
+            <input className="input" placeholder="תיאור סטנדרט חופשי"
+                   value={stdNote}
+                   onChange={e=>setStdNote(e.target.value)} />
+          </div>
         </div>
-      </form>
+        </div>
 
-      {/* ===== assignments section (creation + list together) ===== */}
-      <div className="card">
-        <h3 className="h3" style={{ marginTop: 0 }}>משימות</h3>
-        <div style={{ marginBottom: 16 }}>
-          <h4 className="h4" style={{ marginTop: 0, marginBottom: 12 }}>הוספת משימה</h4>
+        {/* ===== assignments section (creation + list together) ===== */}
+        <div className="card mt8">
+        <h3 className="h3 mt0">משימות</h3>
+        <div className="mb16">
+          <h4 className="h4 mt0 mb12">הוספת משימה</h4>
         <form className="form" onSubmit={addAssignment}>
           <div>
             <label className="label">כותרת *</label>
@@ -457,11 +557,10 @@ export default function ProjectDetails() {
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* ===== contacts section (last) ===== */}
-      <div className="card">
-        <h3 className="h3" style={{ marginTop: 0 }}>אנשי קשר</h3>
+        </div>
+        {/* ===== contacts section ===== */}
+        <div className="card mt8">
+        <h3 className="h3 mt0">אנשי קשר</h3>
         <form className="form" onSubmit={addContact}>
           <div className="grid2">
             <div>
@@ -502,6 +601,80 @@ export default function ProjectDetails() {
             )}
           </tbody>
         </table>
+        </div>
+        {/* ===== files section ===== */}
+        <div className="card mt8">
+        <h3 className="h3 mt0">קבצים</h3>
+        
+        {/* Drag & drop zone */}
+        <div
+          className={`dropZone ${dragActive ? 'is-active' : ''}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <p className="dropZone__label">
+            {uploading ? "מעלה קבצים..." : "גרור קבצים לכאן או"}
+          </p>
+          <label className="btn btn--primary" style={{ cursor: 'pointer' }}>
+            {uploading ? "מעלה..." : "בחר קבצים"}
+            <input
+              type="file"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFileUpload}
+              disabled={uploading}
+            />
+          </label>
+        </div>
+
+        {files.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>שם קובץ</th>
+                <th>גודל</th>
+                <th>הועלה</th>
+                <th className="cell-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {files.map(f => (
+                <tr key={f.id}>
+                  <td><span dir="ltr" style={{ display:'inline-block', direction:'ltr', unicodeBidi:'embed' }}>{f.originalName}</span></td>
+                  <td>{(f.size / 1024).toFixed(1)} KB</td>
+                  <td>{fmt(f.createdAt)}</td>
+                  <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn btn--primary ml8"
+                      onClick={() => downloadFile(f.id, f.originalName)}
+                      title="הורד קובץ"
+                    >
+                      📥 הורד
+                    </button>
+                    <button type="button" className="btn btn--danger" onClick={() => deleteFile(f.id)}>מחק</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="muted">לא הועלו קבצים</p>
+        )}
+        </div>
+
+        {/* Bottom actions */}
+        <div className="row" style={{ gap: 8, marginTop: 16 }}>
+          <div style={{ flex: 1 }} />
+          <button type="button" className="btn btn--primary" onClick={saveDetails} disabled={saving || !fName.trim()}>
+            {saving ? "שומר…" : "שמירה"}
+          </button>
+          <button type="button" className="btn btn--danger" onClick={deleteProject} disabled={busy}>
+            מחיקת פרויקט
+          </button>
+        </div>
       </div>
     </>
   );

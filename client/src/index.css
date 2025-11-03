@@ -74,11 +74,47 @@ body::before{
   overflow: hidden; /* avoids hover bleed on rounded corners */
 }
 
+/* Slightly tighter padding for dense detail sections */
+.card--compact{ padding: 12px; }
+
 /* ========== Utilities ========== */
 .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
 .spacer{ height: 16px; }
 .center { text-align: center; }
 .row.center { justify-content: center; }
+
+/* Spacing utilities */
+.mt0{ margin-top: 0; }
+.mt8{ margin-top: 8px; }
+.mt12{ margin-top: 12px; }
+.mt14{ margin-top: 14px; }
+.mt16{ margin-top: 16px; }
+.ml8{ margin-left: 8px; }
+.gap8{ gap: 8px; }
+.gap16{ gap: 16px; }
+.mb12{ margin-bottom: 12px; }
+.mb16{ margin-bottom: 16px; }
+
+/* Drag & drop upload zone */
+.dropZone{
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  transition: all .2s ease;
+  background: transparent;
+}
+.dropZone.is-active{
+  border-color: var(--brand);
+  background: rgba(85,98,255,.05);
+}
+
+.dropZone__label{ margin: 0 0 20px 0; color: var(--muted); }
+.dropZone.is-active .dropZone__label{ color: var(--brand); }
+
+/* small pill-like button for option chips */
+.btn--chip{ padding: 6px 10px; }
 
 .h1{
   margin: 0 0 18px;
@@ -274,6 +310,8 @@ body::before{
 .spacer-lg{ height: 24px; }
 
 .form { display: grid; gap: 12px; }
+.form--lg { display: grid; gap: 16px; }
+.form--md { display: grid; gap: 14px; }
 .grid2 { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
 @media (max-width: 780px){ .grid2 { grid-template-columns: 1fr; } }
 

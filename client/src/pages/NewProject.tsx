@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
 type ListKind = 'NEGOTIATION' | 'ARCHIVE' | 'SIGNED'
-type Status = 'ACTIVE' | 'ON_HOLD' | 'COMPLETED'
+type Status = 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'QUOTE_GIVEN'
 
 export default function NewProject() {
   const nav = useNavigate()
@@ -13,24 +13,38 @@ export default function NewProject() {
   const [listKind, setListKind] = useState<ListKind>('NEGOTIATION')
   const [status, setStatus] = useState<Status>('ACTIVE')
   const [standard, setStandard] = useState('')
+  const STANDARD_OPTIONS = [
+    'Comfort','Comfort +','Comfort +Glass',
+    'Smart 1','Smart 2','Smart 3',
+    'Prestige 4','Prestige 5','Prestige 6',
+  ]
+  const [stdSelected, setStdSelected] = useState<string[]>([])
+  const [standardNote, setStandardNote] = useState('')
   const [units, setUnits] = useState<number | ''>('')
   const [scopeValue, setScopeValue] = useState('')
-  const [startDate, setStartDate] = useState('')
+  
   const [execution, setExecution] = useState<number | ''>('')
   const [remaining, setRemaining] = useState('')
 
   // initial assignment (optional)
   const [taskTitle, setTaskTitle] = useState('')
   const [taskAssigneeName, setTaskAssigneeName] = useState('')
+  const [taskDueDate, setTaskDueDate] = useState('') // yyyy-mm-dd
+  const [taskNotes, setTaskNotes] = useState('')
 
   // initial contacts (optional)
   const [contactName, setContactName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [initialContacts, setInitialContacts] = useState<Array<{name: string, phone: string}>>([])
 
+  // initial files (optional)
+  const [initialFiles, setInitialFiles] = useState<File[]>([])
+  const [dragActive, setDragActive] = useState(false)
+
   // ui state
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const createdToday = new Date().toLocaleDateString()
 
   const valid =
     name.trim().length > 0 &&
@@ -49,7 +63,7 @@ export default function NewProject() {
       standard: standard.trim() || undefined,
       units: units === '' ? undefined : Number(units),
       scopeValue: scopeValue.trim() || undefined,
-      startDate: startDate ? new Date(startDate).toISOString() : undefined,
+      
       execution: execution === '' ? undefined : Number(execution),
       remaining: remaining.trim() || undefined,
     }
@@ -58,6 +72,8 @@ export default function NewProject() {
       payload.initialAssignment = {
         title: taskTitle.trim(),
         assigneeName: taskAssigneeName.trim() || undefined,
+        dueDate: taskDueDate || undefined,
+        notes: taskNotes.trim() || undefined,
       }
     }
 
@@ -78,6 +94,21 @@ export default function NewProject() {
           msg = (j?.error && JSON.stringify(j.error)) || msg
         } catch {}
         throw new Error(msg)
+      }
+
+      const createdProject = await res.json()
+      const projectId = createdProject.project?.id
+
+      // Upload files if any
+      if (projectId && initialFiles.length > 0) {
+        for (const file of initialFiles) {
+          const formData = new FormData()
+          formData.append('file', file)
+          await fetch(`/api/projects/${projectId}/files`, {
+            method: 'POST',
+            body: formData,
+          }).catch(err => console.error('Failed to upload file:', err))
+        }
       }
 
       const route =
@@ -121,6 +152,36 @@ export default function NewProject() {
     setInitialContacts(initialContacts.filter((_, i) => i !== index))
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setInitialFiles([...initialFiles, ...Array.from(e.target.files)])
+      e.target.value = '' // reset input
+    }
+  }
+
+  const removeFile = (index: number) => {
+    setInitialFiles(initialFiles.filter((_, i) => i !== index))
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setInitialFiles([...initialFiles, ...Array.from(e.dataTransfer.files)])
+    }
+  }
+
   return (
     <>
       <div className="pageHeader">
@@ -131,8 +192,11 @@ export default function NewProject() {
       <form className="card form" onSubmit={onSubmit}>
         {error && <div className="error">{error}</div>}
 
+        <div className="card card--compact mt8 form form--md">
+          <h3 className="h3 mt0">פרטי פרויקט</h3>
+
         <div>
-          <label className="label">שם פרויקט *</label>
+          <label className="label">שם פרויקט</label>
           <input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="לדוגמה: פרויקט א" />
         </div>
 
@@ -155,16 +219,18 @@ export default function NewProject() {
           <div>
             <label className="label">סטטוס</label>
             <select className="input" value={status} onChange={e=>setStatus(e.target.value as Status)}>
-              <option value="ACTIVE">פעיל</option>
-              <option value="ON_HOLD">מושהה</option>
-              <option value="COMPLETED">הושלם</option>
+              <option value="ACTIVE">נוצר פרוייקט</option>
+              <option value="ON_HOLD">נוצר קשר ראשוני</option>
+              <option value="COMPLETED">בוצעה פגישה ראשונה</option>
+              <option value="QUOTE_GIVEN">ניתנה הצעת מחיר</option>
             </select>
           </div>
           <div>
-            <label className="label">סטנדרט</label>
-            <input className="input" value={standard} onChange={e=>setStandard(e.target.value)} placeholder="רגיל / גבוה / מותאם" />
+            <label className="label">תאריך הוספה למערכת</label>
+            <input className="input" value={createdToday} readOnly />
           </div>
         </div>
+        
 
         <div className="grid2">
           <div>
@@ -182,10 +248,13 @@ export default function NewProject() {
           </div>
         </div>
 
-        <div className="grid2">
+        
+
+        {/* Remaining and Execution (inside details card) */}
+        <div className="grid2 mt14">
           <div>
-            <label className="label">תאריך התחלה</label>
-            <input className="input" type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} />
+            <label className="label">יתרה</label>
+            <input className="input" value={remaining} onChange={e=>setRemaining(e.target.value)} placeholder="טקסט חופשי / ₪" />
           </div>
           <div>
             <label className="label">ביצוע (%)</label>
@@ -198,33 +267,63 @@ export default function NewProject() {
           </div>
         </div>
 
-        <div>
-          <label className="label">יתרה</label>
-          <input className="input" value={remaining} onChange={e=>setRemaining(e.target.value)} placeholder="טקסט חופשי / ₪" />
+        {/* Standard at bottom, unwrapped */}
+        <div className="mt12">
+          <label className="label">סטנדרט (ניתן לבחור כמה)</label>
+          <div className="row gap8">
+            {STANDARD_OPTIONS.map(opt => {
+              const active = stdSelected.includes(opt)
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  className={`btn btn--chip ${active ? 'btn--primary' : ''}`}
+                  onClick={() => {
+                    const next = active ? stdSelected.filter(o=>o!==opt) : [...stdSelected, opt]
+                    setStdSelected(next)
+                    setStandard(next.join(', ') + (standardNote.trim() ? (next.length? ', ' : '') + standardNote.trim() : ''))
+                  }}
+                >{opt}</button>
+              )
+            })}
+          </div>
+          <div className="mt12">
+            <input className="input" placeholder="תיאור סטנדרט חופשי"
+                   value={standardNote}
+                   onChange={e=>{ const v=e.target.value; setStandardNote(v); setStandard((stdSelected.join(', ') + (v.trim()? (stdSelected.length? ', ' : '') + v.trim() : ''))); }} />
+          </div>
+        </div>
+
         </div>
 
         {/* Initial assignment (optional) */}
-        <div className="card" style={{marginTop:8}}>
-          <h3 className="h3" style={{marginTop:0}}>משימה ראשונית (אופציונלי)</h3>
-          <div className="grid2">
+        <div className="card mt8">
+          <h3 className="h3 mt0">משימה ראשונית (אופציונלי)</h3>
+          <div className="grid2 gap16">
             <input className="input" placeholder="כותרת משימה"
                    value={taskTitle} onChange={e=>setTaskTitle(e.target.value)} />
             <input className="input" placeholder="שם מטפל"
                    value={taskAssigneeName} onChange={e=>setTaskAssigneeName(e.target.value)} />
           </div>
+          <div className="grid2 gap16 mt12">
+            <input className="input" type="date" placeholder="תאריך יעד"
+                   value={taskDueDate} onChange={e=>setTaskDueDate(e.target.value)} />
+            <input className="input" placeholder="הערות (אופציונלי)"
+                   value={taskNotes} onChange={e=>setTaskNotes(e.target.value)} />
+          </div>
           <div className="helper">אפשר להשאיר ריק — תמיד תוכלו להוסיף משימות מאוחר יותר</div>
         </div>
 
         {/* Initial contacts (optional) */}
-        <div className="card" style={{marginTop:8}}>
-          <h3 className="h3" style={{marginTop:0}}>אנשי קשר ראשוניים (אופציונלי)</h3>
+        <div className="card mt8">
+          <h3 className="h3 mt0">אנשי קשר ראשוניים (אופציונלי)</h3>
           <div className="grid2">
             <input className="input" placeholder="שם"
                    value={contactName} onChange={e=>setContactName(e.target.value)} />
             <input className="input" placeholder="טלפון"
                    value={contactPhone} onChange={e=>setContactPhone(e.target.value)} />
           </div>
-          <div className="actions" style={{marginTop:8}}>
+          <div className="actions">
             <button type="button" className="btn btn--primary" onClick={addContactToList} disabled={!contactName.trim() || !contactPhone.trim()}>
               הוסף איש קשר
             </button>
@@ -254,6 +353,52 @@ export default function NewProject() {
             </div>
           )}
           <div className="helper">אפשר להשאיר ריק — תמיד תוכלו להוסיף אנשי קשר מאוחר יותר</div>
+        </div>
+
+        {/* Initial files (optional) */}
+        <div className="card mt8">
+          <h3 className="h3 mt0">קבצים ראשוניים (אופציונלי)</h3>
+          
+          {/* Drag & drop zone */}
+          <div
+            className={`dropZone ${dragActive ? 'is-active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <p className="dropZone__label">
+              גרור קבצים לכאן או
+            </p>
+            <label className="btn btn--primary" style={{cursor:'pointer'}}>
+              בחר קבצים
+              <input type="file" multiple style={{display:'none'}} onChange={handleFileSelect} />
+            </label>
+          </div>
+
+          {initialFiles.length > 0 && (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>שם קובץ</th>
+                  <th>גודל</th>
+                  <th className="cell-actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {initialFiles.map((f, i) => (
+                  <tr key={i}>
+                    <td><span dir="ltr" style={{ display:'inline-block', direction:'ltr', unicodeBidi:'embed' }}>{f.name}</span></td>
+                    <td>{(f.size / 1024).toFixed(1)} KB</td>
+                    <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                      <button type="button" className="btn btn--danger" onClick={() => removeFile(i)}>הסר</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <div className="helper">אפשר להשאיר ריק — תמיד תוכלו להעלות קבצים מאוחר יותר</div>
         </div>
 
         {!valid && <div className="error">שם פרויקט חובה, וביצוע (אם מולא) חייב להיות בין 0 ל-100.</div>}
