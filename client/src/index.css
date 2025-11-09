@@ -1,95 +1,218 @@
-/* ========== Theme Tokens ========== */
-:root{
-  --bg: #121212;
-  --panel: #181818;
-  --border: #2a2a2a;
-  --text: #eaeaea;
-  --muted: #a3a3a3;
+/**
+ * ================================================================
+ * index.css - Main Application Styles
+ * ================================================================
+ * 
+ * This is the main stylesheet for the project tracker application.
+ * It includes:
+ * - Theme tokens (colors, spacing, shadows)
+ * - Base layout and typography
+ * - Component styles (buttons, inputs, tables, cards)
+ * - Utility classes
+ * - Responsive design
+ * 
+ * The design uses a glassmorphic style with a dark theme and
+ * supports RTL (Right-to-Left) layout for Hebrew.
+ */
 
-  --brand:   #5562ff;
-  --brand-2: #3943ff;
-  --brand-3: #2a32c9;
+/* ================================================================
+   THEME TOKENS
+   ================================================================
+   Global CSS variables for colors, spacing, and effects */
+:root {
+  /* Color palette */
+  --bg: #121212;           /* Main background */
+  --panel: #181818;        /* Panel/card background */
+  --border: #2a2a2a;       /* Border color */
+  --text: #eaeaea;         /* Primary text color */
+  --muted: #a3a3a3;        /* Muted/secondary text */
 
-  --radius: 12px;
-  --shadow: 0 6px 24px rgba(0,0,0,.25);
+  /* Brand colors (blue accent) */
+  --brand: #5562ff;        /* Primary brand color */
+  --brand-2: #3943ff;      /* Darker brand variant */
+  --brand-3: #2a32c9;      /* Darkest brand variant */
+
+  /* Design tokens */
+  --radius: 12px;          /* Border radius for cards/buttons */
+  --shadow: 0 6px 24px rgba(0, 0, 0, .25); /* Standard shadow */
 }
 
-* { box-sizing: border-box; }
+/* Universal box-sizing */
+* { 
+  box-sizing: border-box; 
+}
 
-/* ========== Base Layout ========== */
-html, body, #root { height: 100%; }
+/* ================================================================
+   BASE LAYOUT
+   ================================================================ */
 
-body{
+/* Full height layout */
+html, body, #root { 
+  height: 100%; 
+}
+
+body {
   margin: 0;
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  direction: rtl;
+  direction: rtl; /* Right-to-left for Hebrew */
   background: var(--bg);
 }
 
-/* ✨ Background image with a dim overlay
-   Put bg file at client/public/bg.jpg */
-body::before{
+/* Background image with dim overlay */
+body::before {
   content: "";
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
-    url("/bg.jpg") center / cover no-repeat fixed; /* root-relative so it works on nested routes */
+    linear-gradient(180deg, rgba(0, 0, 0, .55), rgba(0, 0, 0, .55)),
+    url("/bg.jpg") center / cover no-repeat fixed;
   z-index: -1;
   filter: saturate(.9);
 }
 
-/* Center the app */
-.page{
+/* Center the app container */
+.page {
   min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 30px;
 }
 
-/* Main width constraint (bigger per feedback) */
-.container{
+/* Main width constraint */
+.container {
   width: 100%;
-  max-width: 1200px;  /* was 900px */
+  max-width: 1500px; /* Wide layout for better use of space */
 }
 
-/* Glass card wrapper for content (more padding per feedback) */
-.glass{
-  background: rgba(24,24,24,.82);
-  border: 1px solid rgba(255,255,255,.08);
+/* Glassmorphic card wrapper */
+.glass {
+  background: rgba(24, 24, 24, .82);
+  border: 1px solid rgba(255, 255, 255, .08);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   backdrop-filter: blur(3px);
-  padding: 42px;     /* was 20px */
+  padding: 40px;
 }
 
-/* Generic card (used around tables etc.) */
-.card{
+/* ================================================================
+   CARD COMPONENT
+   ================================================================
+   Generic card container used throughout the app */
+.card {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 16px;
-  overflow: hidden; /* avoids hover bleed on rounded corners */
+  overflow: hidden; /* Prevents content overflow on rounded corners */
 }
 
-/* ========== Utilities ========== */
-.row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-.spacer{ height: 16px; }
-.center { text-align: center; }
-.row.center { justify-content: center; }
+/* Compact card variant with less padding */
+.card--compact { 
+  padding: 12px; 
+}
 
-.h1{
+/* ================================================================
+   UTILITY CLASSES
+   ================================================================ */
+
+/* Flexbox row with gap */
+.row { 
+  display: flex; 
+  gap: 12px; 
+  align-items: center; 
+  flex-wrap: wrap; 
+}
+
+/* Vertical spacer */
+.spacer { 
+  height: 16px; 
+}
+
+/* Text alignment */
+.center { 
+  text-align: center; 
+}
+
+/* Centered row */
+.row.center { 
+  justify-content: center; 
+}
+
+/* Spacing utilities */
+.mt0 { margin-top: 0; }
+.mt8 { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mt14 { margin-top: 14px; }
+.mt16 { margin-top: 16px; }
+.ml8 { margin-left: 8px; }
+.gap8 { gap: 8px; }
+.gap16 { gap: 16px; }
+.mb12 { margin-bottom: 12px; }
+.mb16 { margin-bottom: 16px; }
+
+/* ================================================================
+   DRAG & DROP UPLOAD ZONE
+   ================================================================ */
+.dropZone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  transition: all .2s ease;
+  background: transparent;
+}
+
+/* Active drag state */
+.dropZone.is-active {
+  border-color: var(--brand);
+  background: rgba(85, 98, 255, .05);
+}
+
+.dropZone__label { 
+  margin: 0 0 20px 0; 
+  color: var(--muted); 
+}
+
+.dropZone.is-active .dropZone__label { 
+  color: var(--brand); 
+}
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+
+/* Main heading */
+.h1 {
   margin: 0 0 18px;
   font-weight: 800;
-  font-size: clamp(26px, 4vw, 40px);
+  font-size: clamp(28px, 4.6vw, 44px);
   letter-spacing: .2px;
 }
 
-.muted{ color: var(--muted); }
+/* Subheading */
+.h3 {
+  font-weight: 700;
+  font-size: clamp(18px, 3vw, 22px);
+}
 
-/* prettier “back” pill link */
+.h4 {
+  font-weight: 600;
+  font-size: clamp(16px, 2.5vw, 18px);
+}
+
+/* Muted text */
+.muted { 
+  color: var(--muted); 
+}
+
+/* ================================================================
+   NAVIGATION
+   ================================================================ */
+
+/* Back button pill */
 .back {
   display: inline-flex;
   align-items: center;
@@ -97,87 +220,149 @@ body::before{
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,.06);
+  background: rgba(255, 255, 255, .06);
   color: var(--text);
   text-decoration: none;
-  transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease;
+  transition: transform .06s ease, background .15s ease, 
+              border-color .15s ease, filter .15s ease;
 }
+
 .back:hover {
-  background: rgba(255,255,255,.10);
+  background: rgba(255, 255, 255, .10);
   border-color: var(--brand);
   transform: translateY(-2px);
   filter: brightness(1.03);
 }
-.back:active { transform: translateY(0); }
-.back .arrow { font-size: 14px; opacity: .9; }
 
-/* centered page header with side action */
-.pageHeader{
+.back:active { 
+  transform: translateY(0); 
+}
+
+.back .arrow { 
+  font-size: 14px; 
+  opacity: .9; 
+}
+
+/* Page header with centered title and side action */
+.pageHeader {
   position: relative;
   margin-bottom: 12px;
   text-align: center;
-}
-.pageHeader .h1{ margin: 0; }
-.pageHeader .back{
-  position: absolute;
-  inset-inline-start: 0; /* RTL-aware */
-  top: 50%;
-  transform: translateY(-50%);
+  /* Add padding to prevent title overlap with back button */
+  padding: 0 120px;
 }
 
-/* ========== Buttons ========== */
-.btn{
+.pageHeader .h1 { 
+  margin: 0;
+  /* Prevent long titles from overflowing */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pageHeader .back {
+  position: absolute;
+  inset-inline-start: 0; /* RTL-aware positioning */
+  top: 50%;
+  transform: translateY(-50%);
+  /* Ensure back button stays on top */
+  z-index: 10;
+}
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
+.btn {
   padding: 10px 16px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: #222;
   color: var(--text);
   cursor: pointer;
-  transition: transform .06s ease, background .15s ease, border-color .15s ease, filter .15s ease, box-shadow .15s ease;
+  transition: transform .06s ease, background .15s ease, 
+              border-color .15s ease, filter .15s ease, 
+              box-shadow .15s ease;
 }
 
-/* All main buttons same base color */
-.btn--primary{
+/* Primary button (brand color) */
+.btn--primary {
   background: var(--brand-2);
   border-color: var(--brand-3);
   color: var(--text);
 }
-.btn--primary:hover{
+
+.btn--primary:hover {
   background: var(--brand);
   border-color: var(--brand-2);
   transform: translateY(-2px);
   filter: brightness(1.06);
-  box-shadow: 0 6px 22px rgba(85,98,255,.35);
+  box-shadow: 0 6px 22px rgba(85, 98, 255, .35);
 }
-.btn--primary:active{
+
+.btn--primary:active {
   transform: translateY(0);
   filter: brightness(.98);
   box-shadow: none;
 }
 
-/* equal-size, large buttons for the home grid */
-.btn--block{
+/* Block button (full width) */
+.btn--block {
   width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
 }
-.btn--lg{
-  font-size: 20px;
-  padding: 18px 22px;
-  min-height: 56px;
+
+/* Large button */
+.btn--lg {
+  font-size: 22px;
+  padding: 20px 24px;
+  min-height: 60px;
 }
 
-/* ========== Links ========== */
-.link{
+/* Chip button (small, pill-like) */
+.btn--chip { 
+  padding: 6px 10px; 
+}
+
+/* Danger button (delete/remove actions) */
+.btn--danger {
+  background: #c73c3c;
+  border-color: #9f2e2e;
+  color: #fff;
+}
+
+.btn--danger:hover {
+  background: #da4747; 
+  border-color: #c73c3c; 
+  transform: translateY(-2px);
+}
+
+/* Loading state */
+.btn.is-loading { 
+  opacity: .7; 
+  pointer-events: none; 
+}
+
+/* ================================================================
+   LINKS
+   ================================================================ */
+.link {
   color: #9bb0ff;
   text-decoration: none;
 }
-.link:hover{ text-decoration: underline; }
 
-/* ========== Inputs ========== */
-.input{
+.link:hover { 
+  text-decoration: underline; 
+}
+
+/* ================================================================
+   FORM ELEMENTS
+   ================================================================ */
+
+/* Input field */
+.input {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -187,96 +372,365 @@ body::before{
   font-size: 16px;
   transition: border-color .15s ease;
 }
-.input:focus{
+
+.input:focus {
   outline: none;
   border-color: var(--brand);
 }
 
-/* ========== Tables ========== */
-.table{
+/* Form label */
+.label { 
+  font-size: 14px; 
+  color: var(--muted); 
+  margin-bottom: 4px; 
+  display: block; 
+}
+
+/* Helper text */
+.helper { 
+  font-size: 12px; 
+  color: var(--muted); 
+}
+
+/* Form container */
+.form { 
+  display: grid; 
+  gap: 12px; 
+}
+
+.form--lg { 
+  display: grid; 
+  gap: 16px; 
+}
+
+.form--md { 
+  display: grid; 
+  gap: 14px; 
+}
+
+/* Form actions (button row) */
+.actions { 
+  display: flex; 
+  gap: 10px; 
+  justify-content: flex-end; 
+  margin-top: 8px; 
+}
+
+/* Error message */
+.error { 
+  color: #ff9b9b; 
+  font-size: 14px; 
+}
+
+/* ================================================================
+   TABLES
+   ================================================================ */
+.table {
   width: 100%;
   border-collapse: collapse;
+  /* Ensure table doesn't overflow container */
+  table-layout: fixed;
 }
-.table th, .table td{
+
+.table th, 
+.table td {
   padding: 10px;
   border-bottom: 1px solid var(--border);
-  text-align: right;
+  text-align: right; /* RTL alignment */
+  /* Prevent long text from breaking layout */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.table th{
+
+/* Optimized column widths for better balance */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  /* Project name column - controlled width */
+  width: 14%;
+  min-width: 120px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  /* Developer column - controlled width */
+  width: 12%;
+  min-width: 100px;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  /* Units column - compact for numbers */
+  width: 7%;
+  min-width: 70px;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  /* Status column - extra width to prevent Hebrew text from being cut */
+  width: 18%;
+  min-width: 200px;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  /* Last task column - more space for task descriptions */
+  width: 20%;
+  min-width: 180px;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+  /* Handler name column - compact for names */
+  width: 10%;
+  min-width: 100px;
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7) {
+  /* Date column - compact for dates */
+  width: 10%;
+  min-width: 110px;
+}
+
+/* Signed table specific column widths (different structure than Negotiation) */
+/* Columns in Signed: Project, Developer, Units, Standard, Scope, Execution, Remaining, Date */
+/* Override for columns 4, 5, and 8 in signed table */
+.table-signed th:nth-child(4),
+.table-signed td:nth-child(4) {
+  /* Standard column - more space for multiple standards like "Comfort, Smart 1, Prestige 4" */
+  width: 22% !important;
+  min-width: 180px !important;
+}
+
+.table-signed th:nth-child(5),
+.table-signed td:nth-child(5) {
+  /* Scope column - less space, typically numbers/amounts */
+  width: 10% !important;
+  min-width: 100px !important;
+}
+
+.table-signed th:nth-child(8),
+.table-signed td:nth-child(8) {
+  /* Date column - compact, dates don't need much space */
+  width: 9% !important;
+  min-width: 100px !important;
+}
+
+/* Show full text on hover with tooltip effect */
+.table td {
+  position: relative;
+}
+
+.table td:hover {
+  overflow: visible;
+  white-space: normal;
+  z-index: 1;
+}
+
+/* Allow table cells to wrap on small screens */
+@media (max-width: 780px) {
+  .table th,
+  .table td {
+    white-space: normal;
+    word-wrap: break-word;
+    /* Reset fixed widths on mobile */
+    width: auto !important;
+    min-width: 80px !important;
+  }
+  
+  /* Make table scrollable on mobile instead of breaking layout */
+  .card {
+    overflow-x: auto;
+  }
+  
+  .table {
+    /* Use auto layout on mobile for better flexibility */
+    table-layout: auto;
+    /* Minimum width to maintain readability */
+    min-width: 800px;
+  }
+}
+
+/* Actions column (right-aligned in RTL) */
+.table .cell-actions {
+  text-align: left; /* Actually right side in RTL */
+  padding-left: 16px;
+}
+
+.table th {
   color: var(--muted);
   font-weight: 600;
 }
 
-/* Row hover: color the cells */
-.table tbody tr td{
+/* Row hover effect */
+.table tbody tr td {
   transition: background-color .12s ease;
 }
-.table tbody tr:hover td{
-  background-color: rgba(255,255,255,.06);
-}
-.table tbody tr{ cursor: pointer; }
 
-/* ========== Grids ========== */
-/* 3 equal columns for home buttons; stacks on small screens */
-.grid3{
+.table tbody tr:hover td {
+  background-color: rgba(255, 255, 255, .06);
+}
+
+.table tbody tr { 
+  cursor: pointer; 
+}
+
+/* Status coloring on last column (date column in Negotiation) */
+.table tbody tr.row--overdue td:last-child { 
+  background-color: rgba(231, 76, 60, .22); /* Vibrant red for overdue */
+}
+
+.table tbody tr.row--soon td:last-child { 
+  background-color: rgba(255, 152, 0, .22); /* Vibrant orange for due within 2 weeks */
+}
+
+.table tbody tr.row--later td:last-child { 
+  background-color: rgba(46, 204, 113, .22); /* Vibrant green for more than 2 weeks */
+}
+
+/* ================================================================
+   STATUS CHIPS
+   ================================================================
+   Color-coded status indicators */
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  width: 200px; /* Unified width for consistency */
+  text-align: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+/* Status variants (progressively darker blue) */
+.status--active {
+  background: rgba(170, 205, 255, .28);
+  border-color: #9cc3ff;
+  color: #eef4ff;
+}
+
+.status--on-hold {
+  background: rgba(100, 150, 255, .40);
+  border-color: #6e96ff;
+  color: #e5ecff;
+}
+
+.status--completed {
+  background: rgba(50, 95, 255, .52);
+  border-color: #4a69ff;
+  color: #dfe6ff;
+}
+
+.status--quote {
+  background: rgba(30, 75, 245, .60);
+  border-color: #274ee6;
+  color: #eaf0ff;
+}
+
+/* ================================================================
+   GRID LAYOUTS
+   ================================================================ */
+
+/* 3-column grid for home buttons */
+.grid3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-top: 8px;
 }
-@media (max-width: 780px){
-  .grid3{ grid-template-columns: 1fr; }
+
+/* 2-column grid for form fields */
+.grid2 { 
+  display: grid; 
+  gap: 12px; 
+  grid-template-columns: 1fr 1fr; 
 }
 
-.spacer-lg{ height: 24px; }
+/* Stack on small screens */
+@media (max-width: 780px) {
+  .grid3 { 
+    grid-template-columns: 1fr; 
+  }
+  
+  .grid2 { 
+    grid-template-columns: 1fr; 
+  }
+}
 
-.form { display: grid; gap: 12px; }
-.grid2 { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
-@media (max-width: 780px){ .grid2 { grid-template-columns: 1fr; } }
+/* ================================================================
+   ADDITIONAL UTILITIES
+   ================================================================ */
 
-.label { font-size: 14px; color: var(--muted); margin-bottom: 4px; display: block; }
-.helper { font-size: 12px; color: var(--muted); }
+/* Large spacer */
+.spacer-lg { 
+  height: 24px; 
+}
 
-.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
-.error { color: #ff9b9b; font-size: 14px; }
+/* Chip containers (inline fact pills) */
+.chips { 
+  display: flex; 
+  gap: 8px; 
+  flex-wrap: wrap; 
+  margin: 8px 0 16px; 
+}
 
-/* Wider container + a bit more padding */
-.container{ max-width: 1500px;}   /* was 1200 */
-.glass{ padding: 40px; }           /* was 32 */
-
-/* Slightly larger headings & buttons (optional) */
-.h1{ font-size: clamp(28px, 4.6vw, 44px); }
-.btn--lg{ font-size: 22px; min-height: 60px; padding: 20px 24px; }
-
-/* chips (inline fact pills) */
-.chips { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 16px; }
 .chip {
-  display:inline-flex; gap:6px; align-items:center;
-  border:1px solid var(--border); border-radius:999px;
-  padding:6px 10px; background: rgba(255,255,255,.04);
-}
-.chip__label { color: var(--muted); font-size: 12px; }
-.chip__value { font-weight:600; font-size: 13px; }
-
-/* segmented control used to switch lists */
-.pageActions{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin:8px 0 12px; flex-wrap:wrap; }
-.seg{ display:inline-flex; background:#1b1b1b; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.seg__btn{
-  padding:10px 14px; background:transparent; border:0; color:var(--text); cursor:pointer;
-}
-.seg__btn.is-active{ background: var(--brand-2); }
-
-/* section titles inside cards */
-.sectionTitle{ font-weight:700; margin-bottom:12px; }
-
-/* danger style */
-.btn--danger{
-  background: #c73c3c;
-  border-color: #9f2e2e;
-  color: #fff;
-}
-.btn--danger:hover{
-  background:#da4747; border-color:#c73c3c; transform: translateY(-2px);
+  display: inline-flex; 
+  gap: 6px; 
+  align-items: center;
+  border: 1px solid var(--border); 
+  border-radius: 999px;
+  padding: 6px 10px; 
+  background: rgba(255, 255, 255, .04);
 }
 
-.btn.is-loading { opacity: .7; pointer-events: none; }
+.chip__label { 
+  color: var(--muted); 
+  font-size: 12px; 
+}
+
+.chip__value { 
+  font-weight: 600; 
+  font-size: 13px; 
+}
+
+/* Segmented control (used for list switching) */
+.pageActions { 
+  display: flex; 
+  gap: 12px; 
+  align-items: center; 
+  justify-content: space-between; 
+  margin: 8px 0 12px; 
+  flex-wrap: wrap; 
+}
+
+.seg { 
+  display: inline-flex; 
+  background: #1b1b1b; 
+  border: 1px solid var(--border); 
+  border-radius: 10px; 
+  overflow: hidden; 
+}
+
+.seg__btn {
+  padding: 10px 14px; 
+  background: transparent; 
+  border: 0; 
+  color: var(--text); 
+  cursor: pointer;
+}
+
+.seg__btn.is-active { 
+  background: var(--brand-2); 
+}
+
+/* Section titles inside cards */
+.sectionTitle { 
+  font-weight: 700; 
+  margin-bottom: 12px; 
+}

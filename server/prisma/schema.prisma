@@ -1,32 +1,109 @@
-// server/prisma/schema.prisma
+/**
+ * ================================================================
+ * schema.prisma - Prisma Database Schema
+ * ================================================================
+ * 
+ * Defines the database schema for the project tracker application.
+ * 
+ * Database: PostgreSQL
+ * ORM: Prisma
+ * 
+ * Models:
+ * - Project: Main project entity
+ * - Assignment: Tasks/assignments for projects
+ * - Contact: People associated with projects
+ * - ProjectFile: Files attached to projects
+ * 
+ * All relations use cascade delete for data integrity.
+ */
 
+// ================================================================
+// PRISMA CONFIGURATION
+// ================================================================
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+// ================================================================
+// ENUMERATIONS
+// ================================================================
+
+/**
+ * ListKind - Project categorization
+ * 
+ * - NEGOTIATION: Projects in negotiation phase
+ * - SIGNED: Projects that are signed and in execution
+ * - ARCHIVE: Completed or archived projects
+ */
 enum ListKind {
   NEGOTIATION
   SIGNED
   ARCHIVE
 }
 
+/**
+ * ProjectStatus - Current status of project
+ * 
+ * - ACTIVE: Project created, initial stage
+ * - ON_HOLD: Initial contact made
+ * - COMPLETED: First meeting completed
+ * - QUOTE_GIVEN: Price quote provided
+ */
 enum ProjectStatus {
   ACTIVE
   ON_HOLD
   COMPLETED
+  QUOTE_GIVEN
 }
 
+/**
+ * AssignmentStatus - Task completion status
+ * 
+ * - TODO: Not started
+ * - IN_PROGRESS: Currently being worked on
+ * - DONE: Completed
+ * 
+ * Note: Currently not actively used in the UI
+ */
 enum AssignmentStatus {
   TODO
   IN_PROGRESS
   DONE
 }
 
+// ================================================================
+// MODELS
+// ================================================================
+
+/**
+ * Project - Main project entity
+ * 
+ * Represents a construction/development project being tracked.
+ * 
+ * Core fields:
+ * - name: Project name (required)
+ * - developer: Company/person developing the project
+ * - listKind: Which list the project is in (NEGOTIATION/SIGNED/ARCHIVE)
+ * - status: Current project status
+ * 
+ * Details:
+ * - standard: Construction standard/specification
+ * - units: Number of housing units
+ * - scopeValue: Project scope/budget (free text)
+ * - startDate: Project start date
+ * - execution: Execution progress percentage (0-100)
+ * - remaining: Remaining budget (calculated or manual)
+ * 
+ * Relations:
+ * - assignments: Tasks/assignments for this project
+ * - contacts: People associated with this project
+ * - files: Files attached to this project
+ */
 model Project {
   id        Int           @id @default(autoincrement())
   name      String
@@ -40,12 +117,34 @@ model Project {
   execution  Int?
   remaining  String?
 
+  // Relations
   assignments Assignment[]
+  contacts    Contact[]
+  files       ProjectFile[]
 
+  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+/**
+ * Assignment - Task/assignment for a project
+ * 
+ * Represents work items, tasks, or assignments related to a project.
+ * 
+ * Fields:
+ * - title: Task description (required)
+ * - assigneeName: Person responsible for the task
+ * - notes: Additional details or instructions
+ * - dueDate: When the task should be completed
+ * - status: Current status (TODO/IN_PROGRESS/DONE)
+ * 
+ * Relations:
+ * - project: Parent project (cascade delete)
+ * 
+ * The most recent assignment is used to determine project urgency
+ * in the negotiation list view.
+ */
 model Assignment {
   id        Int     @id @default(autoincrement())
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -56,6 +155,64 @@ model Assignment {
   dueDate DateTime?
   status  AssignmentStatus @default(TODO)
 
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/**
+ * Contact - Person associated with a project
+ * 
+ * Stores contact information for people related to the project
+ * (clients, architects, contractors, etc.)
+ * 
+ * Fields:
+ * - name: Contact name (required)
+ * - phone: Phone number (required)
+ * 
+ * Relations:
+ * - project: Parent project (cascade delete)
+ */
+model Contact {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  name      String
+  phone     String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/**
+ * ProjectFile - File attached to a project
+ * 
+ * Stores metadata about files uploaded for projects.
+ * Physical files are stored in server/uploads/ directory.
+ * 
+ * Fields:
+ * - originalName: Original filename (user-facing)
+ * - storedName: Randomized filename on disk (security)
+ * - mimeType: File MIME type (e.g., application/pdf)
+ * - size: File size in bytes
+ * 
+ * Relations:
+ * - project: Parent project (cascade delete)
+ * 
+ * Note: storedName is unique to prevent collisions.
+ * Hebrew characters in originalName are preserved and decoded properly.
+ */
+model ProjectFile {
+  id           Int     @id @default(autoincrement())
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    Int
+  originalName String
+  storedName   String  @unique
+  mimeType     String?
+  size         Int
+
+  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
