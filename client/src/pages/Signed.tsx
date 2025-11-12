@@ -1,7 +1,31 @@
+/**
+ * ================================================================
+ * Signed.tsx - Signed Projects List Page
+ * ================================================================
+ * 
+ * Displays projects that have been signed and are in execution with:
+ * - Search functionality (name, developer, scope, tasks, handlers)
+ * - Detailed project information (units, standard, scope, execution, remaining)
+ * - Sorted by start date (newest first)
+ * - Navigation to project details
+ * 
+ * This page shows active projects that have moved past negotiation
+ * and are now being executed.
+ */
+
+// ================================================================
+// IMPORTS
+// ================================================================
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
 
+// ================================================================
+// TYPE DEFINITIONS
+// ================================================================
+/**
+ * Row - Project data structure for signed projects list
+ */
 type Row = {
   id: number
   name: string
@@ -10,57 +34,128 @@ type Row = {
   scopeValue: string | null
   units: number | null
   standard: string | null
-  execution: number | null
+  execution: number | null // Percentage (0-100)
   remaining: string | null
-  startDate: string | null
+  startDate: string | null // ISO date string
   lastTaskTitle: string | null
   lastHandlerName: string | null
   lastTaskDate: string | null
 }
 
+// ================================================================
+// SIGNED PAGE COMPONENT
+// ================================================================
+/**
+ * Signed - Displays list of signed projects in execution
+ * 
+ * Features:
+ * - Fetches projects with list='SIGNED' from API
+ * - Real-time search across multiple fields
+ * - Sorted by start date (most recent first)
+ * - Displays execution progress and remaining budget
+ */
 export default function Signed() {
+  // ========== STATE ==========
   const [rows, setRows] = useState<Row[]>([])
-  const [q, setQ] = useState('')
+  const [q, setQ] = useState('') // Search query
 
+  // ========== DATA FETCHING ==========
+  /**
+   * Load signed projects on component mount
+   */
   useEffect(() => {
     const p = new URLSearchParams({ list: 'SIGNED' })
-    fetch(`/api/projects?${p}`).then(r=>r.json()).then(setRows)
+    fetch(`/api/projects?${p}`)
+      .then(r => r.json())
+      .then(setRows)
   }, [])
 
+  // ========== DATA PROCESSING ==========
+  /**
+   * Filter projects by search query
+   * Searches across: name, developer, scope, task title, handler name
+   */
   const filtered = rows.filter(r => {
-    const hay = `${r.name} ${r.developer ?? ''} ${r.scopeValue ?? ''} ${r.lastTaskTitle ?? ''} ${r.lastHandlerName ?? ''}`.toLowerCase()
-    return hay.includes(q.toLowerCase())
+    const haystack = `${r.name} ${r.developer ?? ''} ${r.scopeValue ?? ''} ${r.lastTaskTitle ?? ''} ${r.lastHandlerName ?? ''}`.toLowerCase()
+    return haystack.includes(q.toLowerCase())
   })
-  const sorted = [...filtered].sort((a,b)=> {
+  
+  /**
+   * Sort filtered projects by start date (newest first)
+   * Projects without start date are placed at the bottom
+   */
+  const sorted = [...filtered].sort((a, b) => {
     const ta = a.startDate ? Date.parse(a.startDate) : 0
     const tb = b.startDate ? Date.parse(b.startDate) : 0
     return tb - ta
   })
-  const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleDateString() : '—'
+  
+  // ========== UTILITY FUNCTIONS ==========
+  /**
+   * Format ISO date string to localized date
+   */
+  const fmtDate = (iso: string | null) => 
+    iso ? new Date(iso).toLocaleDateString() : '—'
 
+  // ========== RENDER ==========
   return (
     <>
+      {/* Page header with back button */}
       <div className="pageHeader">
-        <Link className="back" to="/"><span className="arrow">←</span>חזרה</Link>
+        <Link className="back" to="/">
+          <span className="arrow">←</span>חזרה
+        </Link>
         <h1 className="h1">חתומים</h1>
       </div>
 
+      {/* Search input */}
       <div className="row" style={{ marginBottom: 12 }}>
-        <input className="input" style={{ maxWidth: 320 }} placeholder="חיפוש…"
-               value={q} onChange={e=>setQ(e.target.value)} />
+        <input 
+          className="input" 
+          style={{ maxWidth: 320 }} 
+          placeholder="חיפוש…"
+          value={q} 
+          onChange={e => setQ(e.target.value)} 
+        />
       </div>
 
+      {/* Projects table */}
       <Table<Row>
+        className="table-signed"
         columns={[
-          { key: 'units', label: 'יח״ד', render: r => (r.units == null ? '—' : r.units) },
-          { key: 'standard', label: 'סטנדרט', render: r => r.standard ?? '—' },
-          { key: 'scopeValue', label: 'היקף', render: r => r.scopeValue ?? '—' },
-          { key: 'execution', label: 'ביצוע (%)', render: r => (r.execution == null ? '—' : r.execution) },
-          { key: 'remaining', label: 'יתרה', render: r => r.remaining ?? '—' },
-          { key: 'startDate', label: 'תאריך התחלה', render: r => fmtDate(r.startDate) },
+          { 
+            key: 'units', 
+            label: 'יח״ד', 
+            render: r => (r.units == null ? '—' : r.units) 
+          },
+          { 
+            key: 'standard', 
+            label: 'סטנדרט', 
+            render: r => r.standard ?? '—' 
+          },
+          { 
+            key: 'scopeValue', 
+            label: 'היקף', 
+            render: r => r.scopeValue ?? '—' 
+          },
+          { 
+            key: 'execution', 
+            label: 'ביצוע (%)', 
+            render: r => (r.execution == null ? '—' : r.execution) 
+          },
+          { 
+            key: 'remaining', 
+            label: 'יתרה', 
+            render: r => r.remaining ?? '—' 
+          },
+          { 
+            key: 'startDate', 
+            label: 'תאריך התחלה', 
+            render: r => fmtDate(r.startDate) 
+          },
         ]}
         rows={sorted}
-        getRowHref={(r)=>`/project/${r.id}`}
+        getRowHref={(r) => `/project/${r.id}`}
         showNameDeveloper
       />
     </>
