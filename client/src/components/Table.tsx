@@ -2,7 +2,7 @@
  * ================================================================
  * Table.tsx - Generic Reusable Table Component
  * ================================================================
- * 
+ *
  * A flexible, type-safe table component with support for:
  * - Custom column rendering
  * - Clickable rows with navigation
@@ -26,10 +26,10 @@ import { Link, useNavigate } from 'react-router-dom'
  * @property label - The column header label
  * @property render - Optional custom render function
  */
-type Col<T> = { 
+type Col<T> = {
   key: keyof T | string
   label: string
-  render?: (row: T) => React.ReactNode 
+  render?: (row: T) => React.ReactNode
 }
 
 // ================================================================
@@ -37,7 +37,7 @@ type Col<T> = {
 // ================================================================
 /**
  * Table - Generic table component with navigation support
- * 
+ *
  * @template T - The type of data in each row
  * @param columns - Array of column definitions
  * @param rows - Array of data rows
@@ -46,12 +46,12 @@ type Col<T> = {
  * @param getRowClass - Function to get CSS class for each row
  * @param showNameDeveloper - Whether to show project name & developer columns
  */
-export function Table<T>({ 
-  columns, 
-  rows, 
-  onRowClick, 
-  getRowHref, 
-  getRowClass, 
+export function Table<T>({
+  columns,
+  rows,
+  onRowClick,
+  getRowHref,
+  getRowClass,
   showNameDeveloper,
   className
 }: {
@@ -64,7 +64,7 @@ export function Table<T>({
   className?: string
 }) {
   const nav = useNavigate()
-  
+
   return (
     <div className="card" style={{ padding: 0 }}>
       <table className={`table ${className || ''}`}>
@@ -84,48 +84,56 @@ export function Table<T>({
             ))}
           </tr>
         </thead>
-        
+
         {/* ========== TABLE BODY ========== */}
         <tbody>
           {rows.map((r, i) => {
             // Get row navigation URL if available
             const href = getRowHref?.(r)
-            
+
             // Click handler - either custom callback or navigation
             const handleClick = () => {
               if (onRowClick) return onRowClick(r)
               if (href) nav(href)
             }
-            
+
             // Keyboard accessibility handler
-            const handleKey = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+            const handleKey = (
+              e: React.KeyboardEvent<HTMLTableRowElement>
+            ) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 handleClick()
               }
             }
-            
+
             return (
               <tr
                 key={i}
                 className={getRowClass?.(r)}
                 onClick={handleClick}
-                role={(onRowClick || href) ? 'button' as any : undefined}
-                tabIndex={(onRowClick || href) ? 0 : undefined}
-                onKeyDown={(onRowClick || href) ? handleKey : undefined}
-                style={(onRowClick || href) ? { cursor: 'pointer' } : undefined}
+                role={onRowClick || href ? ('button' as any) : undefined}
+                tabIndex={onRowClick || href ? 0 : undefined}
+                onKeyDown={onRowClick || href ? handleKey : undefined}
+                style={
+                  onRowClick || href ? { cursor: 'pointer' } : undefined
+                }
               >
                 {/* Optional name & developer cells */}
                 {showNameDeveloper && (
                   <>
                     <td>
                       {href ? (
-                        <Link 
-                          to={href} 
-                          style={{ color: 'inherit', textDecoration: 'none', display: 'block' }}
-                          onClick={(e) => { 
+                        <Link
+                          to={href}
+                          style={{
+                            color: 'inherit',
+                            textDecoration: 'none',
+                            display: 'block'
+                          }}
+                          onClick={e => {
                             e.preventDefault()
-                            nav(href) 
+                            nav(href)
                           }}
                         >
                           {(r as any).name}
@@ -137,7 +145,7 @@ export function Table<T>({
                     <td>{(r as any).developer ?? '—'}</td>
                   </>
                 )}
-                
+
                 {/* Dynamic column cells */}
                 {columns.map(c => (
                   <td key={String(c.key)}>
@@ -147,12 +155,12 @@ export function Table<T>({
               </tr>
             )
           })}
-          
+
           {/* Empty state */}
           {rows.length === 0 && (
             <tr>
-              <td 
-                colSpan={columns.length + (showNameDeveloper ? 2 : 0)} 
+              <td
+                colSpan={columns.length + (showNameDeveloper ? 2 : 0)}
                 style={{ padding: 16, color: 'var(--muted)' }}
               >
                 אין פרויקטים עדיין.
@@ -164,3 +172,5 @@ export function Table<T>({
     </div>
   )
 }
+
+

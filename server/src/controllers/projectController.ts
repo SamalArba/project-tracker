@@ -664,3 +664,141 @@ export async function deleteFile(req: Request, res: Response) {
     res.status(400).json({ error: "cannot_delete_file" })
   }
 }
+
+// ================================================================
+// BACKUP - EXPORT / IMPORT
+// ================================================================
+
+/**
+ * GET /api/backup
+ *
+ * Export a full JSON backup of all projects (including assignments & contacts).
+ * Files are not included because physical uploads live separately on disk.
+ */
+export async function exportBackup(_req: Request, res: Response) {
+  try {
+    const projects = await prisma.project.findMany({
+      orderBy: { id: "asc" },
+      include: {
+        assignments: true,
+        contacts: true,
+      },
+    })
+
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      projectCount: projects.length,
+      projects,
+    }
+
+    const json = JSON.stringify(payload, null, 2)
+    const date = new Date().toISOString().slice(0, 10)
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8")
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=\"project-backup-${date}.json\"`
+    )
+
+    res.send(json)
+  } catch (err: any) {
+    console.error("Export backup error:", err)
+    res.status(500).json({ error: "failed_to_export_backup" })
+  }
+}
+
+type BackupPayload = {
+  version: number
+  projects: any[]
+}
+
+/**
+ * POST /api/backup
+ *
+ * Restore data from a JSON backup created by exportBackup.
+ * This is a destructive operation: it clears existing projects,
+ * assignments and contacts before inserting backup data.
+ */
+export async function importBackup(req: Request, res: Response) {
+  const body = req.body as BackupPayload | undefined
+
+  if (!body || !Array.isArray(body.projects)) {
+    return res.status(400).json({ error: "invalid_backup_format" })
+  }
+
+  const projects = body.projects
+
+  try {
+    const result = await prisma.$transaction(async tx => {
+      // Clear existing data
+      await tx.assignment.deleteMany({})
+      await (tx as any).contact.deleteMany({})
+      await (tx as any).projectFile.deleteMany({})
+      await tx.project.deleteMany({})
+
+      let createdProjects = 0
+
+      for (const p of projects) {
+        const {
+          assignments,
+          contacts,
+          files, // ignored in backup/restore
+          id,
+          createdAt,
+          updatedAt,
+          ...rest
+        } = p as any
+
+        const project = await tx.project.create({
+          data: {
+            name: rest.name,
+            developer: rest.developer ?? null,
+            listKind: rest.listKind,
+            status: rest.status,
+            standard: rest.standard ?? null,
+            units: rest.units ?? null,
+            scopeValue: rest.scopeValue ?? null,
+            startDate: rest.startDate ? new Date(rest.startDate) : null,
+            execution: rest.execution ?? null,
+            remaining: rest.remaining ?? null,
+          },
+        })
+
+        createdProjects++
+
+        if (Array.isArray(assignments) && assignments.length > 0) {
+          for (const a of assignments as any[]) {
+            await tx.assignment.create({
+              data: {
+                projectId: project.id,
+                title: a.title,
+                assigneeName: a.assigneeName ?? null,
+                notes: a.notes ?? null,
+                dueDate: a.dueDate ? new Date(a.dueDate) : null,
+                status: a.status ?? "TODO",
+              },
+            })
+          }
+        }
+
+        if (Array.isArray(contacts) && contacts.length > 0) {
+          await (tx as any).contact.createMany({
+            data: contacts.map((c: any) => ({
+              projectId: project.id,
+              name: String(c.name ?? "").trim(),
+              phone: String(c.phone ?? "").trim(),
+            })),
+          })
+        }
+      }
+
+      return { createdProjects }
+    })
+
+    res.json({ ok: true, ...result })
+  } catch (err: any) {
+    console.error("Import backup error:", err)
+    res.status(500).json({ error: "failed_to_import_backup" })
+  }
+}
