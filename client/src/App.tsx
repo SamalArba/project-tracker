@@ -18,6 +18,8 @@
 // ================================================================
 // IMPORTS
 // ================================================================
+import type React from 'react'
+import { useRef } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Negotiation from './pages/Negotiation'
 import Archive from './pages/Archive'
@@ -59,11 +61,66 @@ export default function App() {
  * 
  * Displays:
  * - Title of the system
+ * - Backup/restore controls for all project lists
  * - Three main list categories (Negotiation, Signed, Archive)
  * - Button to create a new project
  */
 function Home() {
   const nav = useNavigate()
+  const restoreInputRef = useRef<HTMLInputElement | null>(null)
+
+  const downloadBackup = async () => {
+    try {
+      const res = await fetch('/api/backup')
+      if (!res.ok) {
+        throw new Error('backup_export_failed')
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      const date = new Date().toISOString().slice(0, 10)
+      link.href = url
+      link.download = `project-backup-${date}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Backup export error', err)
+      alert('אירעה שגיאה ביצוא הגיבוי')
+    }
+  }
+
+  const triggerRestoreFile = () => {
+    restoreInputRef.current?.click()
+  }
+
+  const handleRestoreFileChange: React.ChangeEventHandler<HTMLInputElement> = async e => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      JSON.parse(text)
+
+      const res = await fetch('/api/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: text
+      })
+
+      if (!res.ok) {
+        throw new Error('backup_import_failed')
+      }
+
+      alert('הגיבוי שוחזר בהצלחה. ייתכן שתצטרך לרענן את הדף.')
+    } catch (err) {
+      console.error('Backup import error', err)
+      alert('אירעה שגיאה בטעינת קובץ הגיבוי')
+    } finally {
+      e.target.value = ''
+    }
+  }
   
   return (
     <>
@@ -105,9 +162,38 @@ function Home() {
         יצירת פרויקט חדש
       </button>
 
+      {/* Backup controls for all lists */}
+      <div
+        className="row"
+        style={{
+          marginTop: 16,
+          marginBottom: 8,
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 12,
+          flexWrap: 'wrap'
+        }}
+      >
+        <button onClick={downloadBackup} className="btn btn--primary">
+          גיבוי למחשב
+        </button>
+        <button onClick={triggerRestoreFile} className="btn btn--danger">
+          טעינת גיבוי
+        </button>
+      </div>
+
       {/* Help text */}
       <div className="spacer" />
       <p className="muted center">בחר רשימה או צור פרויקט חדש.</p>
+
+      {/* Hidden file input for restore */}
+      <input
+        ref={restoreInputRef}
+        type="file"
+        accept="application/json"
+        style={{ display: 'none' }}
+        onChange={handleRestoreFileChange}
+      />
     </>
   )
 }

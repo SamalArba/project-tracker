@@ -22,6 +22,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
+import { ExportButton } from '../components/ExportButton'
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -153,15 +154,35 @@ export default function Negotiation() {
     : s === 'COMPLETED' ? 'status--completed' 
     : 'status--quote'
 
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'name', label: 'שם פרוייקט', getValue: (r: Row) => r.name },
+    { key: 'developer', label: 'יזם', getValue: (r: Row) => r.developer ?? '—' },
+    { key: 'units', label: 'יח״ד', getValue: (r: Row) => r.units ?? '—' },
+    { key: 'scopeValue', label: 'היקף', getValue: (r: Row) => r.scopeValue ?? '—' },
+    { key: 'status', label: 'סטטוס', getValue: (r: Row) => fmtStatus(r.status) },
+    { key: 'lastTaskTitle', label: 'משימה אחרונה', getValue: (r: Row) => r.lastTaskTitle ?? '—' },
+    { key: 'lastHandlerName', label: 'שם המטפל', getValue: (r: Row) => r.lastHandlerName ?? '—' },
+    { key: 'lastTaskDate', label: 'תאריך משימה', getValue: (r: Row) => fmtDate(r.lastTaskDate) }
+  ]
+
   // ========== RENDER ==========
   return (
     <>
-      {/* Page header with back button */}
+      {/* Page header with back button and export button */}
       <div className="pageHeader">
         <Link className="back" to="/">
           <span className="arrow">←</span>חזרה
         </Link>
         <h1 className="h1">משא ומתן</h1>
+        <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <ExportButton
+            columns={exportColumns}
+            rows={ordered}
+            title="פרויקטים במשא ומתן"
+            filename={`משא_ומתן_${new Date().toLocaleDateString('he-IL').replace(/\./g, '-')}`}
+          />
+        </div>
       </div>
 
       {/* Search input */}

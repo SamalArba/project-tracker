@@ -34,6 +34,8 @@ import {
   listFiles,
   downloadFile,
   deleteFile,
+  exportBackup,
+  importBackup,
 } from "../controllers/projectController"
 import upload from "../middleware/upload"
 
@@ -137,3 +139,16 @@ router.get("/files/:fileId", downloadFile)
  * Delete a file (from disk and database)
  */
 router.delete("/files/:fileId", deleteFile)
+
+// ========== BACKUP ROUTES ==========
+/**
+ * GET /api/backup
+ * Download JSON backup of all projects (and related data)
+ */
+router.get("/backup", exportBackup)
+
+/**
+ * POST /api/backup
+ * Restore projects from JSON backup (destructive)
+ */
+router.post("/backup", importBackup)
