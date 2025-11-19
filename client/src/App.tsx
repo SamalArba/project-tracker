@@ -65,13 +65,15 @@ export default function App() {
  * - Three main list categories (Negotiation, Signed, Archive)
  * - Button to create a new project
  */
+import { apiFetch } from './api'
+
 function Home() {
   const nav = useNavigate()
   const restoreInputRef = useRef<HTMLInputElement | null>(null)
 
   const downloadBackup = async () => {
     try {
-      const res = await fetch('/api/backup')
+      const res = await apiFetch('/backup')
       if (!res.ok) {
         throw new Error('backup_export_failed')
       }
@@ -103,7 +105,7 @@ function Home() {
       const text = await file.text()
       JSON.parse(text)
 
-      const res = await fetch('/api/backup', {
+      const res = await apiFetch('/backup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: text
