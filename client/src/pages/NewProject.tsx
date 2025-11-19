@@ -20,6 +20,7 @@
 // ================================================================
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -156,13 +157,13 @@ export default function NewProject() {
     }
 
     // Add initial contacts if any
-    if (initialContacts.length > 0) {
+      if (initialContacts.length > 0) {
       payload.initialContacts = initialContacts
     }
-
+  
     try {
       // Create project
-      const res = await fetch('/api/projects', {
+      const res = await apiFetch('/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -179,13 +180,13 @@ export default function NewProject() {
 
       const createdProject = await res.json()
       const projectId = createdProject.project?.id
-
+  
       // Upload files if any
       if (projectId && initialFiles.length > 0) {
         for (const file of initialFiles) {
           const formData = new FormData()
           formData.append('file', file)
-          await fetch(`/api/projects/${projectId}/files`, {
+          await apiFetch(`/projects/${projectId}/files`, {
             method: 'POST',
             body: formData,
           }).catch(err => console.error('Failed to upload file:', err))
