@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
 import { ExportButton } from '../components/ExportButton'
+import { apiFetch } from '../api'
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -71,7 +72,7 @@ export default function Negotiation() {
     setLoading(true)
     setError(null)
     
-    fetch(`/api/projects?${p}`)
+    apiFetch(`/projects?${p}`)
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then(setRows)
       .catch(e => setError(String(e)))

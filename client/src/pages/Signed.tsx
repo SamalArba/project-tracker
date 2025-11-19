@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
 import { ExportButton } from '../components/ExportButton'
+import { apiFetch } from '../api'
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -66,7 +67,7 @@ export default function Signed() {
    */
   useEffect(() => {
     const p = new URLSearchParams({ list: 'SIGNED' })
-    fetch(`/api/projects?${p}`)
+    apiFetch(`/projects?${p}`)
       .then(r => r.json())
       .then(setRows)
   }, [])

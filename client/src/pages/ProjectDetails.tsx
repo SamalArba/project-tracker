@@ -21,6 +21,7 @@
 // ================================================================
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { apiFetch, apiUrl } from "../api"
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -154,7 +155,7 @@ export default function ProjectDetails() {
     setLoading(true)
     setError(null)
     
-    fetch(`/api/projects/${pid}`)
+    apiFetch(`/projects/${pid}`)
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then((p: Project) => {
         setProject(p)
@@ -182,7 +183,7 @@ export default function ProjectDetails() {
    * Load project files from API
    */
   const loadFiles = () => {
-    fetch(`/api/projects/${pid}/files`)
+    apiFetch(`/projects/${pid}/files`)
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then(setFiles)
       .catch(e => console.error("Failed to load files:", e))
@@ -241,7 +242,7 @@ export default function ProjectDetails() {
     
     setMoving(kind)
     try {
-      const res = await fetch(`/api/projects/${project.id}`, {
+      const res = await apiFetch(`/projects/${project.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listKind: kind }),
@@ -287,7 +288,7 @@ export default function ProjectDetails() {
 
     setSaving(true)
     try {
-      const res = await fetch(`/api/projects/${project.id}`, {
+      const res = await apiFetch(`/projects/${project.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch)
@@ -315,8 +316,8 @@ export default function ProjectDetails() {
       if (aName.trim()) payload.assigneeName = aName.trim()
       if (aNotes.trim()) payload.notes = aNotes.trim()
       if (aDue) payload.dueDate = aDue // 'YYYY-MM-DD' format
-
-      const res = await fetch(`/api/projects/${project.id}/assignments`, {
+      
+      const res = await apiFetch(`/projects/${project.id}/assignments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -342,7 +343,7 @@ export default function ProjectDetails() {
     if (!confirm("למחוק את המשימה?")) return
     
     try {
-      const res = await fetch(`/api/assignments/${assignmentId}`, { 
+      const res = await apiFetch(`/assignments/${assignmentId}`, { 
         method: "DELETE" 
       })
       if (!res.ok) throw new Error(await res.text())
@@ -362,7 +363,7 @@ export default function ProjectDetails() {
     
     setCBusy(true)
     try {
-      const res = await fetch(`/api/projects/${project.id}/contacts`, {
+      const res = await apiFetch(`/projects/${project.id}/contacts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: cName.trim(), phone: cPhone.trim() })
@@ -386,7 +387,7 @@ export default function ProjectDetails() {
     if (!confirm("למחוק את איש הקשר?")) return
     
     try {
-      const res = await fetch(`/api/contacts/${contactId}`, { 
+      const res = await apiFetch(`/contacts/${contactId}`, { 
         method: "DELETE" 
       })
       if (!res.ok) throw new Error(await res.text())
@@ -409,7 +410,7 @@ export default function ProjectDetails() {
         const formData = new FormData()
         formData.append("file", file)
         
-        const res = await fetch(`/api/projects/${project.id}/files`, {
+        const res = await apiFetch(`/projects/${project.id}/files`, {
           method: "POST",
           body: formData,
         })
@@ -465,7 +466,7 @@ export default function ProjectDetails() {
     if (!confirm("למחוק את הקובץ?")) return
     
     try {
-      const res = await fetch(`/api/files/${fileId}`, { 
+      const res = await apiFetch(`/files/${fileId}`, { 
         method: "DELETE" 
       })
       if (!res.ok) throw new Error(await res.text())
@@ -481,7 +482,7 @@ export default function ProjectDetails() {
   const downloadFile = (fileId: number, fileName: string) => {
     // Create temporary link to force download
     const link = document.createElement('a')
-    link.href = `/api/files/${fileId}`
+    link.href = apiUrl(`/files/${fileId}`)
     link.download = fileName
     document.body.appendChild(link)
     link.click()
@@ -499,7 +500,7 @@ export default function ProjectDetails() {
     
     setBusy(true)
     try {
-      const res = await fetch(`/api/projects/${project.id}`, { 
+      const res = await apiFetch(`/projects/${project.id}`, { 
         method: "DELETE" 
       })
       if (!res.ok) throw new Error(await res.text())
