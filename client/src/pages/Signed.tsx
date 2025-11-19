@@ -19,6 +19,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
+import { ExportButton } from '../components/ExportButton'
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -97,15 +98,35 @@ export default function Signed() {
   const fmtDate = (iso: string | null) => 
     iso ? new Date(iso).toLocaleDateString() : '—'
 
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'name', label: 'שם פרוייקט', getValue: (r: Row) => r.name },
+    { key: 'developer', label: 'יזם', getValue: (r: Row) => r.developer ?? '—' },
+    { key: 'units', label: 'יח״ד', getValue: (r: Row) => r.units ?? '—' },
+    { key: 'standard', label: 'סטנדרט', getValue: (r: Row) => r.standard ?? '—' },
+    { key: 'scopeValue', label: 'היקף', getValue: (r: Row) => r.scopeValue ?? '—' },
+    { key: 'execution', label: 'ביצוע (%)', getValue: (r: Row) => r.execution ?? '—' },
+    { key: 'remaining', label: 'יתרה', getValue: (r: Row) => r.remaining ?? '—' },
+    { key: 'startDate', label: 'תאריך התחלה', getValue: (r: Row) => fmtDate(r.startDate) }
+  ]
+
   // ========== RENDER ==========
   return (
     <>
-      {/* Page header with back button */}
+      {/* Page header with back button and export button */}
       <div className="pageHeader">
         <Link className="back" to="/">
           <span className="arrow">←</span>חזרה
         </Link>
         <h1 className="h1">חתומים</h1>
+        <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <ExportButton
+            columns={exportColumns}
+            rows={sorted}
+            title="פרויקטים חתומים"
+            filename={`חתומים_${new Date().toLocaleDateString('he-IL').replace(/\./g, '-')}`}
+          />
+        </div>
       </div>
 
       {/* Search input */}

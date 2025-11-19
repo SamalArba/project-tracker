@@ -18,6 +18,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table } from '../components/Table'
+import { ExportButton } from '../components/ExportButton'
 
 // ================================================================
 // TYPE DEFINITIONS
@@ -79,15 +80,32 @@ export default function Archive() {
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'name', label: 'שם פרוייקט', getValue: (r: ProjectRow) => r.name },
+    { key: 'developer', label: 'יזם', getValue: (r: ProjectRow) => r.developer ?? '—' },
+    { key: 'units', label: 'יח״ד', getValue: (r: ProjectRow) => r.units ?? '—' },
+    { key: 'scopeValue', label: 'היקף', getValue: (r: ProjectRow) => r.scopeValue ?? '—' },
+    { key: 'createdAt', label: 'תאריך יצירה', getValue: (r: ProjectRow) => new Date(r.createdAt).toLocaleDateString('he-IL') }
+  ]
+
   // ========== RENDER ==========
   return (
     <>
-      {/* Page header with back button */}
+      {/* Page header with back button and export button */}
       <div className="pageHeader">
         <Link className="back" to="/">
           <span className="arrow">←</span>חזרה
         </Link>
         <h1 className="h1">ארכיון</h1>
+        <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <ExportButton
+            columns={exportColumns}
+            rows={sorted}
+            title="פרויקטים בארכיון"
+            filename={`ארכיון_${new Date().toLocaleDateString('he-IL').replace(/\./g, '-')}`}
+          />
+        </div>
       </div>
 
       {/* Search input */}
