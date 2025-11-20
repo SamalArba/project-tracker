@@ -8,8 +8,33 @@ export function apiUrl(path: string) {
   return `${API_BASE}${p}`
 }
 
-export function apiFetch(input: string, init?: RequestInit) {
-  return fetch(apiUrl(input), init)
+export function getAuthToken() {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('authToken')
+}
+
+export function apiFetch(input: string, init: RequestInit = {}) {
+  const token = getAuthToken()
+  const headers = new Headers(init.headers || {})
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  const finalInit: RequestInit = { ...init, headers }
+
+  return fetch(apiUrl(input), finalInit).then(res => {
+    if (res.status === 401) {
+      // Token invalid/expired – clear and force login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken')
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login'
+        }
+      }
+    }
+    return res
+  })
 }
 
 

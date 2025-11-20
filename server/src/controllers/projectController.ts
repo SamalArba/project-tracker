@@ -18,7 +18,7 @@
 // ================================================================
 // IMPORTS
 // ================================================================
-import { Request, Response } from "express"
+import { Request, Response, NextFunction } from "express"
 import { prisma } from "../models/prisma"
 import { 
   createAssignmentSchema, 
@@ -30,6 +30,7 @@ import {
 import { shapeProjectList } from "../views/projectView"
 import path from "path"
 import fs from "fs/promises"
+import jwt from "jsonwebtoken"
 import { uploadToS3, getFromS3, deleteFromS3 } from "../services/s3"
 
 // ================================================================
@@ -81,6 +82,13 @@ function decodeFilename(original: string): string {
 }
 
 // ================================================================
+// AUTH CONFIG
+// ================================================================
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "changeme"
+const JWT_SECRET = process.env.JWT_SECRET || "super-secret-change-me"
+
+// ================================================================
 // HEALTH CHECK
 // ================================================================
 /**
@@ -96,6 +104,58 @@ export async function getHealth(_req: Request, res: Response) {
     service: "server", 
     ts: new Date().toISOString() 
   })
+}
+
+// ================================================================
+// AUTH - LOGIN & MIDDLEWARE
+// ================================================================
+
+/**
+ * POST /api/login
+ *
+ * Very simple password-based login for internal use.
+ * Compares the provided password to ADMIN_PASSWORD env var.
+ * On success returns a signed JWT token.
+ */
+export async function login(req: Request, res: Response) {
+  const password: unknown = req.body?.password
+
+  if (typeof password !== "string" || password.length === 0) {
+    return res.status(400).json({ error: "missing_password" })
+  }
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "invalid_credentials" })
+  }
+
+  const token = jwt.sign(
+    { role: "admin" },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  )
+
+  res.json({ token })
+}
+
+/**
+ * Auth middleware - protects all API routes after /health and /login.
+ * Expects an Authorization: Bearer <token> header with a valid JWT.
+ */
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const auth = req.headers.authorization
+
+  if (!auth || !auth.toLowerCase().startsWith("bearer ")) {
+    return res.status(401).json({ error: "unauthorized" })
+  }
+
+  const token = auth.slice(7).trim()
+
+  try {
+    jwt.verify(token, JWT_SECRET)
+    return next()
+  } catch {
+    return res.status(401).json({ error: "unauthorized" })
+  }
 }
 
 // ================================================================
