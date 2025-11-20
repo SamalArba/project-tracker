@@ -19,7 +19,7 @@
 // IMPORTS
 // ================================================================
 import type React from 'react'
-import { useRef } from 'react'
+import { useRef, type JSX } from 'react'
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import Negotiation from './pages/Negotiation'
 import Archive from './pages/Archive'
