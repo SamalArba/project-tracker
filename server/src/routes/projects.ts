@@ -27,6 +27,8 @@ import {
   deleteContact,
   deleteAssignment,
   getHealth,
+  login,
+  requireAuth,
   getProject,
   listProjects,
   patchProject,
@@ -48,12 +50,21 @@ export const router = Router()
 // ROUTE DEFINITIONS
 // ================================================================
 
-// ========== HEALTH CHECK ==========
+// ========== PUBLIC ROUTES (NO AUTH) ==========
 /**
  * GET /api/health
  * Simple health check endpoint
  */
 router.get("/health", getHealth)
+
+/**
+ * POST /api/login
+ * Very simple password-based login for internal use.
+ */
+router.post("/login", login)
+
+// All routes below this line require authentication
+router.use(requireAuth)
 
 // ========== PROJECT ROUTES ==========
 /**
