@@ -19,6 +19,7 @@
 // ================================================================
 import multer from 'multer'
 import path from 'path'
+import fs from 'fs'
 import { randomBytes } from 'crypto'
 
 // ================================================================
@@ -32,12 +33,22 @@ import { randomBytes } from 'crypto'
  * 
  * Example: 1762196665972-729111a521b4a8d8880daf413e7fc663.docx
  */
+
+// Resolve absolute uploads directory and ensure it exists at runtime
+const uploadDir = path.join(__dirname, '../../uploads')
+try {
+  fs.mkdirSync(uploadDir, { recursive: true })
+} catch (err) {
+  // If directory creation fails, we'll see an error on first upload
+  console.error('Failed to ensure uploads directory:', err)
+}
+
 const storage = multer.diskStorage({
   /**
    * Set destination directory for uploaded files
    */
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'))
+    cb(null, uploadDir)
   },
   
   /**
