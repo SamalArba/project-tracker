@@ -20,12 +20,14 @@
 // ================================================================
 import type React from 'react'
 import { useRef } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import Negotiation from './pages/Negotiation'
 import Archive from './pages/Archive'
 import Signed from './pages/Signed'
 import NewProject from './pages/NewProject'
 import ProjectDetails from './pages/ProjectDetails'
+import Login from './pages/Login'
+import { apiFetch, getAuthToken } from './api'
 
 // ================================================================
 // MAIN APP COMPONENT
@@ -36,17 +38,68 @@ import ProjectDetails from './pages/ProjectDetails'
  * Wraps all routes in a glassmorphic container with
  * a centered page layout.
  */
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const token = getAuthToken()
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
+
 export default function App() {
   return (
     <div className="page">
       <div className="container glass">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/list/negotiation" element={<Negotiation />} />
-          <Route path="/list/archive" element={<Archive />} />
-          <Route path="/list/signed" element={<Signed />} />
-          <Route path="/project/new" element={<NewProject />} />
-          <Route path="/project/:id" element={<ProjectDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <Home />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/list/negotiation"
+            element={
+              <RequireAuth>
+                <Negotiation />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/list/archive"
+            element={
+              <RequireAuth>
+                <Archive />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/list/signed"
+            element={
+              <RequireAuth>
+                <Signed />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/project/new"
+            element={
+              <RequireAuth>
+                <NewProject />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/project/:id"
+            element={
+              <RequireAuth>
+                <ProjectDetails />
+              </RequireAuth>
+            }
+          />
         </Routes>
       </div>
     </div>
