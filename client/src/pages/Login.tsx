@@ -53,7 +53,7 @@ export default function Login() {
           />
         </div>
         {error && <div className="error">{error}</div>}
-        <div className="actions">
+        <div className="actions" style={{ justifyContent: 'center' }}>
           <button
             type="submit"
             className="btn btn--primary"

@@ -118,8 +118,6 @@ export default function App() {
  * - Three main list categories (Negotiation, Signed, Archive)
  * - Button to create a new project
  */
-import { apiFetch } from './api'
-
 function Home() {
   const nav = useNavigate()
   const restoreInputRef = useRef<HTMLInputElement | null>(null)
@@ -206,7 +204,6 @@ function Home() {
 
       {/* Spacing */}
       <div className="spacer" />
-      <div className="spacer" />
 
       {/* New project button */}
       <button
@@ -229,11 +226,29 @@ function Home() {
           flexWrap: 'wrap'
         }}
       >
-        <button onClick={downloadBackup} className="btn btn--primary">
+        <button
+          onClick={downloadBackup}
+          className="btn btn--primary"
+          style={{ minWidth: 130 }}
+        >
           גיבוי למחשב
         </button>
-        <button onClick={triggerRestoreFile} className="btn btn--danger">
+        <button
+          onClick={triggerRestoreFile}
+          className="btn btn--danger"
+          style={{ minWidth: 130 }}
+        >
           טעינת גיבוי
+        </button>
+        <button
+          className="btn"
+          style={{ minWidth: 130 }}
+          onClick={() => {
+            localStorage.removeItem('authToken')
+            nav('/login', { replace: true })
+          }}
+        >
+          התנתק
         </button>
       </div>
 
