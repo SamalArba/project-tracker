@@ -30,6 +30,7 @@ import {
 import { shapeProjectList } from "../views/projectView"
 import path from "path"
 import fs from "fs/promises"
+import { uploadToS3, getFromS3, deleteFromS3 } from "../services/s3"
 
 // ================================================================
 // UTILITY FUNCTIONS
@@ -509,6 +510,13 @@ export async function uploadFile(req: Request, res: Response) {
   if (!req.file) return res.status(400).json({ error: "no_file_uploaded" })
 
   try {
+    // Read file from local uploads directory
+    const filePath = path.join(__dirname, "../../uploads", req.file.filename)
+    const buffer = await fs.readFile(filePath)
+
+    // Upload to S3 using storedName as the object key
+    await uploadToS3(req.file.filename, buffer, req.file.mimetype)
+
     const file = await (prisma as any).projectFile.create({
       data: {
         projectId,
@@ -592,7 +600,6 @@ export async function downloadFile(req: Request, res: Response) {
     
     if (!file) return res.sendStatus(404)
 
-    const filePath = path.join(__dirname, "../../uploads", file.storedName)
     const filename = decodeFilename(file.originalName)
     
     // Create ASCII-safe fallback (replace non-ASCII with underscore)
@@ -601,6 +608,9 @@ export async function downloadFile(req: Request, res: Response) {
     // URL-encode for UTF-8 support (RFC 5987)
     const encoded = encodeURIComponent(filename)
     
+    // Fetch file from S3
+    const s3Object = await getFromS3(file.storedName)
+
     // Set response headers
     res.setHeader('Content-Type', (file.mimeType as string) || 'application/octet-stream')
     res.setHeader(
@@ -609,7 +619,12 @@ export async function downloadFile(req: Request, res: Response) {
     )
     
     // Stream file to client
-    res.sendFile(filePath)
+    // In Node, Body is a readable stream
+    const bodyStream: any = (s3Object as any).Body
+    if (!bodyStream || typeof bodyStream.pipe !== "function") {
+      throw new Error("Invalid S3 object body")
+    }
+    bodyStream.pipe(res)
   } catch (err: any) {
     console.error("Download file error:", err)
     res.status(500).json({ error: "failed_to_download_file" })
@@ -653,6 +668,13 @@ export async function deleteFile(req: Request, res: Response) {
     } catch (fsErr: any) {
       // File may have been manually deleted - log warning but continue
       console.warn("File not found on disk (may have been deleted manually):", fsErr.message)
+    }
+
+    // Delete from S3 (ignore errors to avoid blocking)
+    try {
+      await deleteFromS3(file.storedName)
+    } catch (s3Err: any) {
+      console.warn("Failed to delete file from S3:", s3Err?.message ?? s3Err)
     }
 
     // Delete database record
