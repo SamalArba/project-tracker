@@ -267,7 +267,7 @@ export async function patchProject(req: Request, res: Response) {
   try {
     const data = updateProjectSchema.parse(req.body)
     
-    // Auto-calculate remaining budget if applicable
+    // Auto-calculate remaining budget (amount left) if applicable
     const hasScope = Object.prototype.hasOwnProperty.call(data, 'scopeValue')
     const hasExec = Object.prototype.hasOwnProperty.call(data, 'execution')
     
@@ -280,9 +280,11 @@ export async function patchProject(req: Request, res: Response) {
         const numericScope = Number(scope.replace(/[^0-9]/g, ''))
         
         if (Number.isFinite(numericScope)) {
-          // Calculate: remaining = scope * (execution / 100)
-          const rem = Math.max(0, Math.round(numericScope * e / 100));
-          (data as any).remaining = String(rem)
+          // Calculate remaining amount: scope * (1 - execution/100)
+          const clamped = Math.max(0, Math.min(100, e))
+          const remainingPct = 100 - clamped
+          const rem = Math.max(0, Math.round((numericScope * remainingPct) / 100))
+          ;(data as any).remaining = String(rem)
         }
       }
     }
@@ -325,15 +327,19 @@ export async function createProject(req: Request, res: Response) {
   try {
     const data = createProjectSchema.parse(req.body)
     
-    // Auto-calculate remaining budget if not provided
-    if (data.remaining == null && 
-        typeof data.scopeValue === 'string' && 
-        typeof data.execution === 'number') {
-      const numericScope = Number(data.scopeValue.replace(/[^0-9]/g, ''))
-      
+    // Auto-calculate remaining budget (amount left) if not provided
+    if (
+      data.remaining == null &&
+      typeof data.scopeValue === "string" &&
+      typeof data.execution === "number"
+    ) {
+      const numericScope = Number(data.scopeValue.replace(/[^0-9]/g, ""))
+
       if (Number.isFinite(numericScope)) {
-        const rem = Math.max(0, Math.round(numericScope * data.execution / 100));
-        (data as any).remaining = String(rem)
+        const clamped = Math.max(0, Math.min(100, data.execution))
+        const remainingPct = 100 - clamped
+        const rem = Math.max(0, Math.round((numericScope * remainingPct) / 100))
+        ;(data as any).remaining = String(rem)
       }
     }
     

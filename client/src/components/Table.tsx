@@ -66,7 +66,7 @@ export function Table<T>({
   const nav = useNavigate()
 
   return (
-    <div className="card" style={{ padding: 0 }}>
+    <div className="card card--flush">
       <table className={`table ${className || ''}`}>
         {/* ========== TABLE HEADER ========== */}
         <thead>
@@ -115,9 +115,6 @@ export function Table<T>({
                 role={onRowClick || href ? ('button' as any) : undefined}
                 tabIndex={onRowClick || href ? 0 : undefined}
                 onKeyDown={onRowClick || href ? handleKey : undefined}
-                style={
-                  onRowClick || href ? { cursor: 'pointer' } : undefined
-                }
               >
                 {/* Optional name & developer cells */}
                 {showNameDeveloper && (
@@ -159,10 +156,7 @@ export function Table<T>({
           {/* Empty state */}
           {rows.length === 0 && (
             <tr>
-              <td
-                colSpan={columns.length + (showNameDeveloper ? 2 : 0)}
-                style={{ padding: 16, color: 'var(--muted)' }}
-              >
+              <td colSpan={columns.length + (showNameDeveloper ? 2 : 0)} className="table__empty">
                 אין פרויקטים עדיין.
               </td>
             </tr>

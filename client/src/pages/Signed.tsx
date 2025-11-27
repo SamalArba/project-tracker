@@ -42,6 +42,7 @@ type Row = {
   lastTaskTitle: string | null
   lastHandlerName: string | null
   lastTaskDate: string | null
+  isTotal?: boolean
 }
 
 // ================================================================
@@ -91,13 +92,47 @@ export default function Signed() {
     const tb = b.startDate ? Date.parse(b.startDate) : 0
     return tb - ta
   })
+
+  // ========== TOTALS ROW ==========
+  const sumNumeric = (values: Array<string | null>) =>
+    values.reduce((acc, v) => {
+      if (!v) return acc
+      const n = Number(String(v).replace(/[^0-9]/g, ''))
+      return Number.isFinite(n) ? acc + n : acc
+    }, 0)
+
+  const totalScope = sumNumeric(sorted.map(r => r.scopeValue))
+  const totalRemaining = sumNumeric(sorted.map(r => r.remaining))
+
+  const formatAmount = (n: number) =>
+    n > 0 ? n.toLocaleString('he-IL') : '—'
+
+  const rowsWithTotal: Row[] = [
+    ...sorted,
+    {
+      id: -1,
+      name: 'סה״כ',
+      developer: null,
+      status: 'ACTIVE',
+      scopeValue: totalScope ? formatAmount(totalScope) : '—',
+      units: null,
+      standard: null,
+      execution: null,
+      remaining: totalRemaining ? formatAmount(totalRemaining) : '—',
+      startDate: null,
+      lastTaskTitle: null,
+      lastHandlerName: null,
+      lastTaskDate: null,
+      isTotal: true,
+    },
+  ]
   
   // ========== UTILITY FUNCTIONS ==========
   /**
-   * Format ISO date string to localized date
+   * Format ISO date string to year only
    */
-  const fmtDate = (iso: string | null) => 
-    iso ? new Date(iso).toLocaleDateString() : '—'
+  const fmtDate = (iso: string | null) =>
+    iso ? String(new Date(iso).getFullYear()) : '—'
 
   // Export columns configuration
   const exportColumns = [
@@ -106,7 +141,11 @@ export default function Signed() {
     { key: 'units', label: 'יח״ד', getValue: (r: Row) => r.units ?? '—' },
     { key: 'standard', label: 'סטנדרט', getValue: (r: Row) => r.standard ?? '—' },
     { key: 'scopeValue', label: 'היקף', getValue: (r: Row) => r.scopeValue ?? '—' },
-    { key: 'execution', label: 'ביצוע (%)', getValue: (r: Row) => r.execution ?? '—' },
+    {
+      key: 'execution',
+      label: 'ביצוע (%)',
+      getValue: (r: Row) => (r.execution == null ? '—' : `${r.execution}%`),
+    },
     { key: 'remaining', label: 'יתרה', getValue: (r: Row) => r.remaining ?? '—' },
     { key: 'startDate', label: 'תאריך התחלה', getValue: (r: Row) => fmtDate(r.startDate) }
   ]
@@ -120,7 +159,7 @@ export default function Signed() {
           <span className="arrow">←</span>חזרה
         </Link>
         <h1 className="h1">חתומים</h1>
-        <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+        <div className="pageHeader__action">
           <ExportButton
             columns={exportColumns}
             rows={sorted}
@@ -131,10 +170,9 @@ export default function Signed() {
       </div>
 
       {/* Search input */}
-      <div className="row" style={{ marginBottom: 12 }}>
+      <div className="row mb12">
         <input 
-          className="input" 
-          style={{ maxWidth: 320 }} 
+          className="input input--narrow"
           placeholder="חיפוש…"
           value={q} 
           onChange={e => setQ(e.target.value)} 
@@ -163,7 +201,7 @@ export default function Signed() {
           { 
             key: 'execution', 
             label: 'ביצוע (%)', 
-            render: r => (r.execution == null ? '—' : r.execution) 
+            render: r => (r.execution == null ? '—' : `${r.execution}%`) 
           },
           { 
             key: 'remaining', 
@@ -176,8 +214,9 @@ export default function Signed() {
             render: r => fmtDate(r.startDate) 
           },
         ]}
-        rows={sorted}
-        getRowHref={(r) => `/project/${r.id}`}
+        rows={rowsWithTotal}
+        getRowHref={(r) => (r.isTotal ? '' : `/project/${r.id}`)}
+        getRowClass={r => (r.isTotal ? 'row--total' : '')}
         showNameDeveloper
       />
     </>

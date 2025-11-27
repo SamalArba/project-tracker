@@ -176,7 +176,7 @@ export default function Negotiation() {
           <span className="arrow">←</span>חזרה
         </Link>
         <h1 className="h1">משא ומתן</h1>
-        <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+        <div className="pageHeader__action">
           <ExportButton
             columns={exportColumns}
             rows={ordered}
@@ -187,10 +187,9 @@ export default function Negotiation() {
       </div>
 
       {/* Search input */}
-      <div className="row" style={{ marginBottom: 12 }}>
+      <div className="row mb12">
         <input 
-          className="input" 
-          style={{ maxWidth: 320 }} 
+          className="input input--narrow"
           placeholder="חיפוש…"
           value={q} 
           onChange={e => setQ(e.target.value)} 
