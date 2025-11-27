@@ -99,7 +99,7 @@ export default function NewProject() {
   // ========== AUTO-CALCULATION ==========
   /**
    * Debounced auto-calculation of remaining budget
-   * Formula: remaining = scopeValue * execution / 100
+   * Formula: remaining = scopeValue * (1 - execution / 100)
    * Updates 400ms after user stops typing
    */
   useEffect(() => {
@@ -110,7 +110,9 @@ export default function NewProject() {
       const e = typeof execution === 'number' ? execution : NaN
       
       if (Number.isFinite(numericScope) && Number.isFinite(e)) {
-        const rem = Math.max(0, Math.round(numericScope * e / 100))
+        const clamped = Math.max(0, Math.min(100, e))
+        const remainingPct = 100 - clamped
+        const rem = Math.max(0, Math.round((numericScope * remainingPct) / 100))
         const next = String(rem)
         if (next !== remaining) setRemaining(next)
       }
@@ -373,17 +375,8 @@ export default function NewProject() {
             </div>
           </div>
 
-          {/* Remaining and Execution */}
+          {/* Execution and Remaining */}
           <div className="grid2 mt14">
-            <div>
-              <label className="label">יתרה</label>
-              <input 
-                className="input" 
-                value={remaining} 
-                onChange={e => setRemaining(e.target.value)} 
-                placeholder="טקסט חופשי / ₪" 
-              />
-            </div>
             <div>
               <label className="label">ביצוע (%)</label>
               <input
@@ -394,6 +387,15 @@ export default function NewProject() {
                 value={execution}
                 onChange={e => setExecution(e.target.value === '' ? '' : Number(e.target.value))}
                 placeholder="0–100"
+              />
+            </div>
+            <div>
+              <label className="label">יתרה</label>
+              <input 
+                className="input" 
+                value={remaining} 
+                onChange={e => setRemaining(e.target.value)} 
+                placeholder="טקסט חופשי / ₪" 
               />
             </div>
           </div>
@@ -510,7 +512,7 @@ export default function NewProject() {
           
           {/* Contacts list */}
           {initialContacts.length > 0 && (
-            <div style={{ marginTop: 12 }}>
+            <div className="mt12">
               <table className="table">
                 <thead>
                   <tr>
@@ -524,7 +526,7 @@ export default function NewProject() {
                     <tr key={i}>
                       <td>{c.name}</td>
                       <td>{c.phone}</td>
-                      <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                      <td className="cell-actions cell-actions--tight">
                         <button 
                           type="button" 
                           className="btn btn--danger" 
@@ -557,12 +559,12 @@ export default function NewProject() {
             <p className="dropZone__label">
               גרור קבצים לכאן או
             </p>
-            <label className="btn btn--primary" style={{ cursor: 'pointer' }}>
+            <label className="btn btn--primary btn--file-label">
               בחר קבצים
               <input 
                 type="file" 
                 multiple 
-                style={{ display: 'none' }} 
+                className="hidden-input"
                 onChange={handleFileSelect} 
               />
             </label>
@@ -582,15 +584,12 @@ export default function NewProject() {
                 {initialFiles.map((f, i) => (
                   <tr key={i}>
                     <td>
-                      <span 
-                        dir="ltr" 
-                        style={{ display: 'inline-block', direction: 'ltr', unicodeBidi: 'embed' }}
-                      >
+                      <span dir="ltr" className="text-ltr">
                         {f.name}
                       </span>
                     </td>
                     <td>{(f.size / 1024).toFixed(1)} KB</td>
-                    <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                    <td className="cell-actions cell-actions--tight">
                       <button 
                         type="button" 
                         className="btn btn--danger" 

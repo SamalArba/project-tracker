@@ -113,6 +113,11 @@ body::before {
   padding: 12px; 
 }
 
+/* Card variant with no inner padding (used for full-width tables) */
+.card--flush {
+  padding: 0;
+}
+
 /* ================================================================
    UTILITY CLASSES
    ================================================================ */
@@ -269,6 +274,14 @@ body::before {
   z-index: 10;
 }
 
+/* Action area inside page header (e.g., export button) */
+.pageHeader__action {
+  position: absolute;
+  inset-inline-end: 0; /* Opposite side from back button */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 /* ================================================================
    BUTTONS
    ================================================================ */
@@ -371,6 +384,11 @@ body::before {
   color: var(--text);
   font-size: 16px;
   transition: border-color .15s ease;
+}
+
+/* Narrow input variant used in list search bars */
+.input--narrow {
+  max-width: 320px;
 }
 
 .input:focus {
@@ -495,12 +513,27 @@ body::before {
 
 /* Signed table specific column widths (different structure than Negotiation) */
 /* Columns in Signed: Project, Developer, Units, Standard, Scope, Execution, Remaining, Date */
+
+/* Project name column - give it more space */
+.table-signed th:nth-child(1),
+.table-signed td:nth-child(1) {
+  width: 22% !important;
+  min-width: 170px !important;
+}
+
+/* Developer column - slightly narrower */
+.table-signed th:nth-child(2),
+.table-signed td:nth-child(2) {
+  width: 10% !important;
+  min-width: 90px !important;
+}
+
 /* Override for columns 4, 5, and 8 in signed table */
 .table-signed th:nth-child(4),
 .table-signed td:nth-child(4) {
-  /* Standard column - more space for multiple standards like "Comfort, Smart 1, Prestige 4" */
-  width: 22% !important;
-  min-width: 180px !important;
+  /* Standard column - slightly narrower, still enough for multiple standards */
+  width: 14% !important;
+  min-width: 130px !important;
 }
 
 .table-signed th:nth-child(5),
@@ -547,8 +580,17 @@ body::before {
   .table {
     /* Use auto layout on mobile for better flexibility */
     table-layout: auto;
-    /* Minimum width to maintain readability */
-    min-width: 800px;
+    /* Allow table to shrink to viewport width */
+    min-width: 0;
+  }
+
+  /* Tighter padding on mobile for better fit */
+  .glass {
+    padding: 20px;
+  }
+
+  .page {
+    padding: 16px;
   }
 }
 
@@ -556,6 +598,12 @@ body::before {
 .table .cell-actions {
   text-align: left; /* Actually right side in RTL */
   padding-left: 16px;
+}
+
+/* Utility: tighter padding for action cells */
+.cell-actions--tight {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .table th {
@@ -587,6 +635,59 @@ body::before {
 
 .table tbody tr.row--later td:last-child { 
   background-color: rgba(46, 204, 113, .22); /* Vibrant green for more than 2 weeks */
+}
+
+/* Totals row styling (e.g., summary row in Signed table) */
+.table tbody tr.row--total td {
+  background-color: rgba(85, 98, 255, .12);
+  font-weight: 600;
+}
+
+.table__empty {
+  padding: 16px;
+  color: var(--muted);
+}
+
+/* Simple flex-grow utility */
+.flex-1 {
+  flex: 1;
+}
+
+/* Utility: visually hidden file input */
+.hidden-input {
+  display: none;
+}
+
+/* Utility: label styled as clickable button */
+.btn--file-label {
+  cursor: pointer;
+}
+
+/* Utility: force LTR display for filenames/paths */
+.text-ltr {
+  display: inline-block;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Archive table specific column widths */
+/* Columns (with showNameDeveloper): 1=Name, 2=Developer, 3=Units, 4=Scope, 5=CreatedAt */
+.table-archive th:nth-child(1),
+.table-archive td:nth-child(1) {
+  width: 32% !important;
+  min-width: 200px !important;
+}
+
+.table-archive th:nth-child(2),
+.table-archive td:nth-child(2),
+.table-archive th:nth-child(3),
+.table-archive td:nth-child(3),
+.table-archive th:nth-child(4),
+.table-archive td:nth-child(4),
+.table-archive th:nth-child(5),
+.table-archive td:nth-child(5) {
+  width: 17% !important;
+  min-width: 90px !important;
 }
 
 /* ================================================================
@@ -754,4 +855,125 @@ body::before {
 .export-modal-content {
   position: relative !important;
   z-index: 100000 !important;
+  background: #181818;
+  border: 1px solid #444;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+}
+
+.export-modal__header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-modal__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.export-modal__close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-modal__body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.export-modal__rowCount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.export-modal__rowCountText {
+  font-size: 14px;
+}
+
+.export-modal__rowCountSelect {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #202020;
+  color: var(--text);
+}
+
+.export-modal__selectButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.export-modal__selectButtons .btn {
+  flex: 1;
+}
+
+.export-modal__columns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-modal__columnLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-modal__columnLabel--active {
+  background: rgba(85, 98, 255, 0.12);
+}
+
+.export-modal__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--brand);
+}
+
+.export-modal__columnText {
+  font-size: 15px;
+}
+
+.export-modal__info {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.export-modal__footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
