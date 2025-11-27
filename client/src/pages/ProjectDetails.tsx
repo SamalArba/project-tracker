@@ -164,11 +164,29 @@ export default function ProjectDetails() {
         setFName(p.name ?? "")
         setFDev(p.developer ?? "")
         setFStatus(p.status)
-        setStdSelected(
-          p.standard 
-            ? p.standard.split(',').map(s => s.trim()).filter(Boolean) 
-            : []
-        )
+
+        // Split existing standard into known options and free text note
+        if (p.standard) {
+          const tokens = p.standard
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean)
+
+          const selected: string[] = []
+          const noteParts: string[] = []
+
+          for (const t of tokens) {
+            if (STANDARD_OPTIONS.includes(t)) selected.push(t)
+            else noteParts.push(t)
+          }
+
+          setStdSelected(selected)
+          setStdNote(noteParts.join(", "))
+        } else {
+          setStdSelected([])
+          setStdNote("")
+        }
+
         setFUnits(p.units == null ? "" : String(p.units))
         setFScope(p.scopeValue ?? "")
         setFStart(p.startDate ? new Date(p.startDate).toISOString().slice(0, 10) : "")
@@ -198,19 +216,21 @@ export default function ProjectDetails() {
   // ========== AUTO-CALCULATION ==========
   /**
    * Debounced auto-calculation of remaining budget
-   * Formula: remaining = scopeValue * execution / 100
+   * Formula: remaining = scopeValue * (1 - execution / 100)
    * Updates 400ms after user stops typing
    */
   useEffect(() => {
     const handle = window.setTimeout(() => {
       const rawScope = fScope.trim()
       const numericScope = rawScope
-        ? Number(rawScope.replace(/[^0-9]/g, ''))
+        ? Number(rawScope.replace(/[^0-9]/g, ""))
         : NaN
       const e = fExec === "" ? NaN : Number(fExec)
       
       if (Number.isFinite(numericScope) && Number.isFinite(e)) {
-        const rem = Math.max(0, Math.round(numericScope * e / 100))
+        const clamped = Math.max(0, Math.min(100, e))
+        const remainingPct = 100 - clamped
+        const rem = Math.max(0, Math.round((numericScope * remainingPct) / 100))
         const next = String(rem)
         if (next !== fRem) setFRem(next)
       }
@@ -575,7 +595,7 @@ export default function ProjectDetails() {
             >
               {moving === "ARCHIVE" ? "מעביר…" : "ארכיון"}
             </button>
-            <div style={{ flex: 1 }} />
+            <div className="flex-1" />
             {mToast && <div className="muted">{mToast}</div>}
           </div>
         </div>
@@ -851,7 +871,7 @@ export default function ProjectDetails() {
           </form>
           
           {/* Contacts table */}
-          <table className="table" style={{ marginTop: 12 }}>
+          <table className="table mt12">
             <thead>
               <tr>
                 <th>שם</th>
@@ -866,7 +886,7 @@ export default function ProjectDetails() {
                   <td>{c.name}</td>
                   <td>{c.phone}</td>
                   <td>{fmt(c.createdAt)}</td>
-                  <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                  <td className="cell-actions cell-actions--tight">
                     <button 
                       type="button" 
                       className="btn btn--danger" 

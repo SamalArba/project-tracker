@@ -99,7 +99,7 @@ export default function Archive() {
           <span className="arrow">←</span>חזרה
         </Link>
         <h1 className="h1">ארכיון</h1>
-        <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+        <div className="pageHeader__action">
           <ExportButton
             columns={exportColumns}
             rows={sorted}
@@ -110,18 +110,18 @@ export default function Archive() {
       </div>
 
       {/* Search input */}
-      <div className="row" style={{ marginBottom: 12 }}>
+      <div className="row mb12">
         <input 
           value={q} 
           onChange={e => setQ(e.target.value)} 
           placeholder="חיפוש…" 
-          className="input" 
-          style={{ maxWidth: 300 }}
+          className="input input--narrow"
         />
       </div>
 
       {/* Projects table */}
       <Table<ProjectRow>
+        className="table-archive"
         columns={[
           { 
             key: 'units', 
