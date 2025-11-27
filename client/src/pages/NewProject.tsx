@@ -53,9 +53,9 @@ export default function NewProject() {
   // Standard options (predefined templates)
   const [standard, setStandard] = useState('')
   const STANDARD_OPTIONS = [
-    'Comfort', 'Comfort +', 'Comfort +Glass',
-    'Smart 1', 'Smart 2', 'Smart 3',
-    'Prestige 4', 'Prestige 5', 'Prestige 6',
+    'COMFORT', 'COMFORT +', 'COMFORT +GLASS',
+    'SMART 1', 'SMART 2', 'SMART 3',
+    'PRESTIGE 4', 'PRESTIGE 5', 'PRESTIGE 6',
   ]
   const [stdSelected, setStdSelected] = useState<string[]>([])
   const [standardNote, setStandardNote] = useState('')

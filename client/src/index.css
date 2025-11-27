@@ -585,12 +585,14 @@ body::before {
   }
 
   /* Tighter padding on mobile for better fit */
-  .glass {
-    padding: 20px;
-  }
-
   .page {
     padding: 16px;
+    display: block;
+  }
+
+  .glass {
+    padding: 20px;
+    max-width: 100%;
   }
 }
 

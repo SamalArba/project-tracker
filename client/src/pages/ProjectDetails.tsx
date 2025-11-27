@@ -111,9 +111,9 @@ export default function ProjectDetails() {
   
   // Standard options (predefined templates)
   const STANDARD_OPTIONS = [
-    "Comfort", "+ Comfort", "Comfort + Glass",
-    "Smart 1", "Smart 2", "Smart 3",
-    "Prestige 4", "Prestige 5", "Prestige 6",
+    "COMFORT", "COMFORT +", "COMFORT + GLASS",
+    "SMART 1", "SMART 2", "SMART 3",
+    "PRESTIGE 4", "PRESTIGE 5", "PRESTIGE 6",
   ]
   const [stdSelected, setStdSelected] = useState<string[]>([])
   const [stdNote, setStdNote] = useState("")
@@ -176,7 +176,8 @@ export default function ProjectDetails() {
           const noteParts: string[] = []
 
           for (const t of tokens) {
-            if (STANDARD_OPTIONS.includes(t)) selected.push(t)
+            const upper = t.toUpperCase()
+            if (STANDARD_OPTIONS.includes(upper)) selected.push(upper)
             else noteParts.push(t)
           }
 
@@ -296,9 +297,10 @@ export default function ProjectDetails() {
     patch.status = fStatus
     
     const stdCombined = stdSelected.join(', ')
-    patch.standard = (stdCombined || stdNote.trim()) 
-      ? [stdCombined, stdNote.trim()].filter(Boolean).join(', ') 
+    const stdRaw = (stdCombined || stdNote.trim())
+      ? [stdCombined, stdNote.trim()].filter(Boolean).join(', ')
       : null
+    patch.standard = stdRaw
     
     patch.units = fUnits === "" ? null : Number(fUnits)
     patch.scopeValue = fScope.trim() === "" ? null : fScope.trim()
