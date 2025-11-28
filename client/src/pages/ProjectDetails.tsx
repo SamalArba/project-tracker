@@ -107,6 +107,8 @@ export default function ProjectDetails() {
   // ========== EDITABLE PROJECT FIELDS ==========
   const [fName, setFName] = useState("")
   const [fDev, setFDev] = useState("")
+  const [developerOptions, setDeveloperOptions] = useState<string[]>([])
+  const [showDevSuggestions, setShowDevSuggestions] = useState(false)
   const [fStatus, setFStatus] = useState<Status>("ACTIVE")
   
   // Standard options (predefined templates)
@@ -213,6 +215,28 @@ export default function ProjectDetails() {
     load()
     loadFiles() 
   }, [pid])
+
+  // Load distinct developer names for autocomplete suggestions
+  useEffect(() => {
+    apiFetch("/developers")
+      .then(res => (res.ok ? res.json() : []))
+      .then((list: unknown) => {
+        if (Array.isArray(list)) {
+          setDeveloperOptions(list.filter((v): v is string => typeof v === "string"))
+        }
+      })
+      .catch(() => {
+        // Ignore – screen still works without suggestions
+      })
+  }, [])
+
+  const filteredDevelopers = developerOptions
+    .filter(name =>
+      fDev.trim()
+        ? name.toLowerCase().includes(fDev.trim().toLowerCase())
+        : true
+    )
+    .slice(0, 10)
 
   // ========== AUTO-CALCULATION ==========
   /**
@@ -325,10 +349,13 @@ export default function ProjectDetails() {
   }
 
   // ========== ASSIGNMENT MANAGEMENT ==========
+  // Track which assignment is being edited (if any)
+  const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null)
+
   /**
-   * Add new assignment/task to project
+   * Create or update assignment/task for project
    */
-  const addAssignment = async (e: React.FormEvent) => {
+  const saveAssignment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!project || !aTitle.trim()) return
     
@@ -338,11 +365,17 @@ export default function ProjectDetails() {
       if (aName.trim()) payload.assigneeName = aName.trim()
       if (aNotes.trim()) payload.notes = aNotes.trim()
       if (aDue) payload.dueDate = aDue // 'YYYY-MM-DD' format
-      
-      const res = await apiFetch(`/projects/${project.id}/assignments`, {
-        method: "POST",
+
+      const isEditing = editingAssignmentId != null
+      const url = isEditing
+        ? `/assignments/${editingAssignmentId}`
+        : `/projects/${project.id}/assignments`
+      const method = isEditing ? "PATCH" : "POST"
+
+      const res = await apiFetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       })
       if (!res.ok) throw new Error(await res.text())
 
@@ -351,11 +384,34 @@ export default function ProjectDetails() {
       setAName("")
       setADue("")
       setANotes("")
+      setEditingAssignmentId(null)
     } catch (e: any) {
-      alert("שגיאה בהוספת משימה: " + (e?.message || e))
+      alert("שגיאה בשמירת משימה: " + (e?.message || e))
     } finally {
       setBusy(false)
     }
+  }
+
+  /**
+   * Start editing an existing assignment
+   */
+  const startEditAssignment = (a: Assignment) => {
+    setEditingAssignmentId(a.id)
+    setATitle(a.title)
+    setAName(a.assigneeName ?? "")
+    setADue(a.dueDate ? a.dueDate.slice(0, 10) : "")
+    setANotes(a.notes ?? "")
+  }
+
+  /**
+   * Cancel current assignment edit
+   */
+  const cancelEditAssignment = () => {
+    setEditingAssignmentId(null)
+    setATitle("")
+    setAName("")
+    setADue("")
+    setANotes("")
   }
 
   /**
@@ -616,13 +672,38 @@ export default function ProjectDetails() {
           
           {/* Developer and Status */}
           <div className="grid2 mt14">
-            <div>
+            <div className="field-developer">
               <label className="label">יזם</label>
               <input 
-                className="input" 
+                className="input"
                 value={fDev} 
-                onChange={e => setFDev(e.target.value)} 
+                autoComplete="off"
+                onChange={e => {
+                  setFDev(e.target.value)
+                  setShowDevSuggestions(true)
+                }} 
+                onFocus={() => setShowDevSuggestions(true)}
+                onBlur={() => {
+                  window.setTimeout(() => setShowDevSuggestions(false), 120)
+                }}
               />
+              {showDevSuggestions && filteredDevelopers.length > 0 && (
+                <div className="devSuggest">
+                  {filteredDevelopers.map(name => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="devSuggest__item"
+                      onMouseDown={() => {
+                        setFDev(name)
+                        setShowDevSuggestions(false)
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label className="label">סטטוס</label>
@@ -743,10 +824,12 @@ export default function ProjectDetails() {
         <div className="card mt8">
           <h3 className="h3 mt0">משימות</h3>
           
-          {/* Add assignment form */}
+          {/* Add / edit assignment form */}
           <div className="mb16">
-            <h4 className="h4 mt0 mb12">הוספת משימה</h4>
-            <form className="form" onSubmit={addAssignment}>
+            <h4 className="h4 mt0 mb12">
+              {editingAssignmentId ? "עריכת משימה" : "הוספת משימה"}
+            </h4>
+            <form className="form" onSubmit={saveAssignment}>
               <div>
                 <label className="label">כותרת *</label>
                 <input 
@@ -790,14 +873,23 @@ export default function ProjectDetails() {
                   className="btn btn--primary" 
                   disabled={busy || !aTitle.trim()}
                 >
-                  הוספה
+                  {editingAssignmentId ? "עדכון" : "הוספה"}
                 </button>
+                {editingAssignmentId && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={cancelEditAssignment}
+                  >
+                    ביטול
+                  </button>
+                )}
               </div>
             </form>
           </div>
 
           {/* Assignments table */}
-          <table className="table">
+          <table className="table table-assignments">
             <thead>
               <tr>
                 <th>כותרת</th>
@@ -816,7 +908,15 @@ export default function ProjectDetails() {
                   <td>{fmt(a.dueDate)}</td>
                   <td>{a.notes || "—"}</td>
                   <td>{fmt(a.createdAt)}</td>
-                  <td className="cell-actions" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+                  <td className="cell-actions cell-actions--tight">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => startEditAssignment(a)}
+                      title="עריכת משימה"
+                    >
+                      עריכה
+                    </button>
                     <button
                       type="button"
                       className="btn btn--danger"

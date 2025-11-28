@@ -25,7 +25,8 @@ import {
   createContactSchema, 
   createProjectSchema, 
   listParam, 
-  updateProjectSchema 
+  updateProjectSchema,
+  updateAssignmentSchema,
 } from "../models/schemas"
 import { shapeProjectList } from "../views/projectView"
 import path from "path"
@@ -490,6 +491,71 @@ export async function deleteAssignment(req: Request, res: Response) {
   } catch (err: any) {
     console.error("Delete assignment error:", err)
     res.status(400).json({ error: "cannot_delete_assignment" })
+  }
+}
+
+// ================================================================
+// DEVELOPERS - LIST DISTINCT
+// ================================================================
+/**
+ * GET /api/developers
+ *
+ * Returns a sorted list of distinct developer names from all projects.
+ * Used for auto-complete suggestions in the client.
+ */
+export async function listDevelopers(_req: Request, res: Response) {
+  try {
+    // Group by developer and count how many projects use each one
+    const rows = await prisma.project.groupBy({
+      by: ["developer"],
+      where: { developer: { not: null } },
+      _count: { _all: true },
+      orderBy: {
+        _count: { _all: "desc" }, // most used first
+      },
+    })
+
+    const developers = rows
+      .map(r => r.developer)
+      .filter((d): d is string => !!d?.trim())
+
+    res.json(developers)
+  } catch (err: any) {
+    console.error("List developers error:", err)
+    res.status(500).json({ error: "cannot_list_developers" })
+  }
+}
+
+// ================================================================
+// ASSIGNMENT (TASK) - UPDATE
+// ================================================================
+/**
+ * PATCH /api/assignments/:id
+ *
+ * Update an existing assignment/task.
+ * Supports partial updates of title, notes, assigneeName, and dueDate.
+ */
+export async function updateAssignment(req: Request, res: Response) {
+  const id = Number(req.params.id)
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "bad id" })
+
+  try {
+    const data = updateAssignmentSchema.parse(req.body)
+
+    const updated = await prisma.assignment.update({
+      where: { id },
+      data: {
+        title: data.title,
+        notes: data.notes,
+        assigneeName: data.assigneeName ? data.assigneeName.trim() : undefined,
+        dueDate: data.dueDate ?? undefined,
+      },
+    })
+
+    res.json(updated)
+  } catch (err: any) {
+    console.error("Update assignment error:", err?.issues ?? err)
+    res.status(400).json({ error: err?.issues ?? "Bad request" })
   }
 }
 

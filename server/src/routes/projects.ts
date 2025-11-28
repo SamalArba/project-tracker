@@ -26,6 +26,8 @@ import {
   createContact,
   deleteContact,
   deleteAssignment,
+  updateAssignment,
+  listDevelopers,
   getHealth,
   login,
   requireAuth,
@@ -74,6 +76,12 @@ router.use(requireAuth)
 router.get("/projects", listProjects)
 
 /**
+ * GET /api/developers
+ * List distinct developer names for autocomplete
+ */
+router.get("/developers", listDevelopers)
+
+/**
  * GET /api/projects/:id
  * Get single project with full details
  */
@@ -103,6 +111,12 @@ router.delete("/projects/:id", deleteProject)
  * Create a new task for a project
  */
 router.post("/projects/:id/assignments", createAssignment)
+
+/**
+ * PATCH /api/assignments/:id
+ * Update an existing task
+ */
+router.patch("/assignments/:id", updateAssignment)
 
 /**
  * DELETE /api/assignments/:id

@@ -93,19 +93,27 @@ export default function Signed() {
     return tb - ta
   })
 
-  // ========== TOTALS ROW ==========
+  // ========== TOTALS ROW & FORMATTING ==========
   const sumNumeric = (values: Array<string | null>) =>
     values.reduce((acc, v) => {
       if (!v) return acc
-      const n = Number(String(v).replace(/[^0-9]/g, ''))
+      const n = Number(String(v).replace(/[^0-9.-]/g, ''))
       return Number.isFinite(n) ? acc + n : acc
     }, 0)
 
   const totalScope = sumNumeric(sorted.map(r => r.scopeValue))
   const totalRemaining = sumNumeric(sorted.map(r => r.remaining))
+  const totalUnits = sorted.reduce((acc, r) => acc + (r.units ?? 0), 0)
 
   const formatAmount = (n: number) =>
-    n > 0 ? n.toLocaleString('he-IL') : '—'
+    n > 0 ? `₪ ${n.toLocaleString('he-IL')}` : '—'
+
+  const formatCurrencyCell = (v: string | null) => {
+    if (v == null || v === '') return '—'
+    const n = Number(String(v).replace(/[^0-9.-]/g, ''))
+    if (!Number.isFinite(n) || n === 0) return `₪ ${v}`
+    return `₪ ${n.toLocaleString('he-IL')}`
+  }
 
   const rowsWithTotal: Row[] = [
     ...sorted,
@@ -115,7 +123,7 @@ export default function Signed() {
       developer: null,
       status: 'ACTIVE',
       scopeValue: totalScope ? formatAmount(totalScope) : '—',
-      units: null,
+      units: totalUnits || null,
       standard: null,
       execution: null,
       remaining: totalRemaining ? formatAmount(totalRemaining) : '—',
@@ -140,13 +148,13 @@ export default function Signed() {
     { key: 'developer', label: 'יזם', getValue: (r: Row) => r.developer ?? '—' },
     { key: 'units', label: 'יח״ד', getValue: (r: Row) => r.units ?? '—' },
     { key: 'standard', label: 'סטנדרט', getValue: (r: Row) => r.standard ?? '—' },
-    { key: 'scopeValue', label: 'היקף', getValue: (r: Row) => r.scopeValue ?? '—' },
+    { key: 'scopeValue', label: 'היקף', getValue: (r: Row) => formatCurrencyCell(r.scopeValue) },
     {
       key: 'execution',
-      label: 'ביצוע (%)',
+      label: 'ביצוע',
       getValue: (r: Row) => (r.execution == null ? '—' : `${r.execution}%`),
     },
-    { key: 'remaining', label: 'יתרה', getValue: (r: Row) => r.remaining ?? '—' },
+    { key: 'remaining', label: 'יתרה', getValue: (r: Row) => formatCurrencyCell(r.remaining) },
     { key: 'startDate', label: 'תאריך התחלה', getValue: (r: Row) => fmtDate(r.startDate) }
   ]
 
@@ -196,17 +204,17 @@ export default function Signed() {
           { 
             key: 'scopeValue', 
             label: 'היקף', 
-            render: r => r.scopeValue ?? '—' 
+            render: r => formatCurrencyCell(r.scopeValue) 
           },
           { 
             key: 'execution', 
-            label: 'ביצוע (%)', 
+            label: 'ביצוע', 
             render: r => (r.execution == null ? '—' : `${r.execution}%`) 
           },
           { 
             key: 'remaining', 
             label: 'יתרה', 
-            render: r => r.remaining ?? '—' 
+            render: r => formatCurrencyCell(r.remaining) 
           },
           { 
             key: 'startDate', 
