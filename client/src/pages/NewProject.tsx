@@ -47,6 +47,8 @@ export default function NewProject() {
   // ========== BASIC PROJECT FIELDS ==========
   const [name, setName] = useState('')
   const [developer, setDeveloper] = useState('')
+  const [developerOptions, setDeveloperOptions] = useState<string[]>([])
+  const [showDevSuggestions, setShowDevSuggestions] = useState(false)
   const [listKind, setListKind] = useState<ListKind>('NEGOTIATION')
   const [status, setStatus] = useState<Status>('ACTIVE')
   
@@ -120,6 +122,28 @@ export default function NewProject() {
     
     return () => window.clearTimeout(handle)
   }, [scopeValue, execution, remaining])
+
+  // ========== LOAD DEVELOPER SUGGESTIONS ==========
+  useEffect(() => {
+    apiFetch('/developers')
+      .then(res => (res.ok ? res.json() : []))
+      .then((list: unknown) => {
+        if (Array.isArray(list)) {
+          setDeveloperOptions(list.filter((v): v is string => typeof v === 'string'))
+        }
+      })
+      .catch(() => {
+        // Ignore errors – form still works without suggestions
+      })
+  }, [])
+
+  const filteredDevelopers = developerOptions
+    .filter(name =>
+      developer.trim()
+        ? name.toLowerCase().includes(developer.trim().toLowerCase())
+        : true
+    )
+    .slice(0, 10)
 
   // ========== FORM SUBMISSION ==========
   /**
@@ -307,14 +331,40 @@ export default function NewProject() {
 
           {/* Developer and List */}
           <div className="grid2">
-            <div>
+            <div className="field-developer">
               <label className="label">יזם</label>
               <input 
-                className="input" 
+                className="input"
                 value={developer} 
-                onChange={e => setDeveloper(e.target.value)} 
+                autoComplete="off"
+                onChange={e => {
+                  setDeveloper(e.target.value)
+                  setShowDevSuggestions(true)
+                }} 
+                onFocus={() => setShowDevSuggestions(true)}
+                onBlur={() => {
+                  // Delay hiding to allow click on suggestion
+                  window.setTimeout(() => setShowDevSuggestions(false), 120)
+                }}
                 placeholder="לדוגמה: יזם בע״מ" 
               />
+              {showDevSuggestions && filteredDevelopers.length > 0 && (
+                <div className="devSuggest">
+                  {filteredDevelopers.map(name => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="devSuggest__item"
+                      onMouseDown={() => {
+                        setDeveloper(name)
+                        setShowDevSuggestions(false)
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label className="label">רשימה</label>
