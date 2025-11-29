@@ -505,19 +505,22 @@ export async function deleteAssignment(req: Request, res: Response) {
  */
 export async function listDevelopers(_req: Request, res: Response) {
   try {
-    // Group by developer and count how many projects use each one
-    const rows = await prisma.project.groupBy({
-      by: ["developer"],
+    // Fetch all non-null developers and count in memory for compatibility
+    const rows = await prisma.project.findMany({
       where: { developer: { not: null } },
-      _count: { _all: true },
-      orderBy: {
-        _count: { _all: "desc" }, // most used first
-      },
+      select: { developer: true },
     })
 
-    const developers = rows
-      .map(r => r.developer)
-      .filter((d): d is string => !!d?.trim())
+    const counts: Record<string, number> = {}
+    for (const row of rows) {
+      const name = row.developer?.trim()
+      if (!name) continue
+      counts[name] = (counts[name] || 0) + 1
+    }
+
+    const developers = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1]) // most used first
+      .map(([name]) => name)
 
     res.json(developers)
   } catch (err: any) {
