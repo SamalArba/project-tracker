@@ -297,6 +297,12 @@ body::before {
               box-shadow .15s ease;
 }
 
+/* Default hover for neutral buttons (non-primary / non-danger) */
+.btn:hover {
+  background: #2a2a2a;
+  border-color: #555;
+}
+
 /* Primary button (brand color) */
 .btn--primary {
   background: var(--brand-2);
@@ -410,6 +416,40 @@ body::before {
   color: var(--muted); 
 }
 
+/* Developer autocomplete dropdown */
+.field-developer {
+  position: relative;
+}
+
+.devSuggest {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #181818;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 40;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.devSuggest__item {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  text-align: right; /* RTL */
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.devSuggest__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* Form container */
 .form { 
   display: grid; 
@@ -521,33 +561,42 @@ body::before {
   min-width: 170px !important;
 }
 
-/* Developer column - slightly narrower */
+/* Developer column - give it a bit more space */
 .table-signed th:nth-child(2),
 .table-signed td:nth-child(2) {
-  width: 10% !important;
-  min-width: 90px !important;
+  width: 14% !important;
+  min-width: 110px !important;
 }
 
 /* Override for columns 4, 5, and 8 in signed table */
 .table-signed th:nth-child(4),
 .table-signed td:nth-child(4) {
   /* Standard column - slightly narrower, still enough for multiple standards */
-  width: 14% !important;
-  min-width: 130px !important;
+  width: 12% !important;
+  min-width: 120px !important;
 }
 
 .table-signed th:nth-child(5),
 .table-signed td:nth-child(5) {
   /* Scope column - less space, typically numbers/amounts */
-  width: 10% !important;
-  min-width: 100px !important;
+  width: 8% !important;
+  min-width: 90px !important;
+}
+
+.table-signed th:nth-child(6),
+.table-signed td:nth-child(6),
+.table-signed th:nth-child(7),
+.table-signed td:nth-child(7) {
+  /* Execution & Remaining columns - numeric and compact */
+  width: 8% !important;
+  min-width: 80px !important;
 }
 
 .table-signed th:nth-child(8),
 .table-signed td:nth-child(8) {
   /* Date column - compact, dates don't need much space */
-  width: 9% !important;
-  min-width: 100px !important;
+  width: 7% !important;
+  min-width: 90px !important;
 }
 
 /* Show full text on hover with tooltip effect */
@@ -607,6 +656,58 @@ body::before {
   padding-top: 10px;
   padding-bottom: 10px;
 }
+
+/* Assignments table (Project Details - tasks)
+   Columns: 1=Title, 2=Assignee, 3=Due, 4=Notes, 5=Created, 6=Actions */
+.table-assignments th:nth-child(2),
+.table-assignments td:nth-child(2) {
+  /* Assignee - a bit narrower */
+  width: 10% !important;
+  min-width: 90px !important;
+}
+
+.table-assignments th:nth-child(3),
+.table-assignments td:nth-child(3) {
+  /* Due date - compact */
+  width: 10% !important;
+  min-width: 90px !important;
+}
+
+.table-assignments th:nth-child(4),
+.table-assignments td:nth-child(4) {
+  /* Notes - some room but not too much */
+  width: 18% !important;
+  min-width: 130px !important;
+}
+
+.table-assignments th:nth-child(5),
+.table-assignments td:nth-child(5) {
+  /* Created date - compact */
+  width: 10% !important;
+  min-width: 80px !important;
+}
+
+.table-assignments th:nth-child(6),
+.table-assignments td:nth-child(6) {
+  /* Actions - extra space for two buttons */
+  width: 18% !important;
+  min-width: 150px !important;
+}
+
+/* In assignments, don't clip the action buttons */
+.table-assignments .cell-actions {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+/* Visible space between edit (gray) and delete (red) buttons in assignments row */
+.table-assignments .cell-actions .btn.btn--danger {
+  margin-right: 10px; /* space between מחיקה (left) and עריכה (right) in RTL */
+}
+
+/* Assignments table (Project Details - tasks)
+   Uses default table column widths; only rely on global .cell-actions */
 
 .table th {
   color: var(--muted);

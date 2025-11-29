@@ -120,6 +120,12 @@ export const createAssignmentSchema = z.object({
   dueDate: z.coerce.date().optional().nullable(),
 })
 
+/**
+ * Schema for updating an existing assignment/task (PATCH)
+ * All fields are optional to support partial updates.
+ */
+export const updateAssignmentSchema = createAssignmentSchema.partial()
+
 // ================================================================
 // CONTACT SCHEMA
 // ================================================================
