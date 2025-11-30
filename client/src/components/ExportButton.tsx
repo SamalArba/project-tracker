@@ -1,9 +1,9 @@
 /**
- * ExportButton - Word export with options
+ * ExportButton - Excel export with options
  *
  * - Modal lets you choose which columns to include
  * - Modal lets you choose how many rows (1–10) to export
- * - Generates a .doc (HTML) that opens nicely in Word with proper Hebrew
+ * - Generates an .xls (HTML table) that opens nicely in Excel with proper Hebrew
  */
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -56,7 +56,7 @@ export function ExportButton<T>({ columns, rows, title, filename }: Props<T>) {
     setSelected(new Set())
   }
 
-  const exportWord = async () => {
+  const exportExcel = async () => {
     if (selected.size === 0) {
       alert('נא לבחור לפחות עמודה אחת')
       return
@@ -90,14 +90,13 @@ export function ExportButton<T>({ columns, rows, title, filename }: Props<T>) {
 
     const html = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
       xmlns="http://www.w3.org/TR/REC-html40">
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(title)}</title>
 </head>
-<body dir="rtl" style="font-family: Arial, sans-serif; font-size: 12pt; margin: 40px;">
-  <h2 style="text-align:center;margin-bottom:24px;">${escapeHtml(title)}</h2>
+<body dir="rtl" style="font-family: Arial, sans-serif; font-size: 12pt; margin: 20px;">
   <table style="border-collapse:collapse;width:100%;text-align:center;direction:rtl;">
     <thead>${headerRow}</thead>
     <tbody>${bodyRows}</tbody>
@@ -105,11 +104,13 @@ export function ExportButton<T>({ columns, rows, title, filename }: Props<T>) {
 </body>
 </html>`
 
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
+    const blob = new Blob(['\ufeff', html], {
+      type: 'application/vnd.ms-excel;charset=utf-8',
+    })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `${filename || 'export'}.doc`
+    link.download = `${filename || 'export'}.xls`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -138,7 +139,7 @@ export function ExportButton<T>({ columns, rows, title, filename }: Props<T>) {
           fontSize: '14px'
         }}
       >
-        📄 ייצא ל-Word
+        📊 ייצוא לאקסל
       </button>
 
       {isOpen &&
@@ -338,12 +339,12 @@ export function ExportButton<T>({ columns, rows, title, filename }: Props<T>) {
                 }}
               >
                 <button
-                  onClick={exportWord}
+                  onClick={exportExcel}
                   disabled={selected.size === 0}
                   className="btn btn--primary"
                   style={{ opacity: selected.size === 0 ? 0.5 : 1 }}
                 >
-                  ייצא ל-Word
+                  ייצוא לאקסל
                 </button>
               </div>
             </div>
