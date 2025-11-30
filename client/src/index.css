@@ -504,22 +504,22 @@ body::before {
 /* Optimized column widths for better balance */
 .table th:nth-child(1),
 .table td:nth-child(1) {
-  /* Project name column - controlled width */
-  width: 14%;
+  /* Project name column - same width as developer */
+  width: 18%;
   min-width: 120px;
 }
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-  /* Developer column - controlled width */
-  width: 12%;
+  /* Developer column - same width as project name */
+  width: 18%;
   min-width: 100px;
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
   /* Units column - compact for numbers */
-  width: 7%;
+  width: 6%;
   min-width: 70px;
 }
 
@@ -533,39 +533,46 @@ body::before {
 .table th:nth-child(5),
 .table td:nth-child(5) {
   /* Last task column - more space for task descriptions */
-  width: 20%;
+  width: 14%;
   min-width: 180px;
 }
 
 .table th:nth-child(6),
 .table td:nth-child(6) {
   /* Handler name column - compact for names */
-  width: 10%;
+  width: 8%;
   min-width: 100px;
 }
 
 .table th:nth-child(7),
 .table td:nth-child(7) {
   /* Date column - compact for dates */
-  width: 10%;
+  width: 9%;
   min-width: 110px;
 }
 
 /* Signed table specific column widths (different structure than Negotiation) */
 /* Columns in Signed: Project, Developer, Units, Standard, Scope, Execution, Remaining, Date */
 
-/* Project name column - give it more space */
+/* Project name column - same width as developer */
 .table-signed th:nth-child(1),
 .table-signed td:nth-child(1) {
-  width: 22% !important;
+  width: 18% !important;
   min-width: 170px !important;
 }
 
-/* Developer column - give it a bit more space */
+/* Developer column - same width as name */
 .table-signed th:nth-child(2),
 .table-signed td:nth-child(2) {
-  width: 14% !important;
+  width: 18% !important;
   min-width: 110px !important;
+}
+
+/* Units column - take a bit of space away */
+.table-signed th:nth-child(3),
+.table-signed td:nth-child(3) {
+  width: 5% !important;
+  min-width: 70px !important;
 }
 
 /* Override for columns 4, 5, and 8 in signed table */
@@ -588,15 +595,21 @@ body::before {
 .table-signed th:nth-child(7),
 .table-signed td:nth-child(7) {
   /* Execution & Remaining columns - numeric and compact */
-  width: 8% !important;
+  width: 4% !important;
   min-width: 80px !important;
+}
+
+.table-signed th:nth-child(7),
+.table-signed td:nth-child(7) {
+  /* Remaining column - give it a bit more width */
+  width: 7% !important;
 }
 
 .table-signed th:nth-child(8),
 .table-signed td:nth-child(8) {
   /* Date column - compact, dates don't need much space */
-  width: 7% !important;
-  min-width: 90px !important;
+  width: 4% !important;
+  min-width: 70px !important;
 }
 
 /* Show full text on hover with tooltip effect */
@@ -777,19 +790,36 @@ body::before {
 /* Columns (with showNameDeveloper): 1=Name, 2=Developer, 3=Units, 4=Scope, 5=CreatedAt */
 .table-archive th:nth-child(1),
 .table-archive td:nth-child(1) {
-  width: 32% !important;
+  /* Name - same width as developer */
+  width: 28% !important;
   min-width: 200px !important;
 }
 
 .table-archive th:nth-child(2),
-.table-archive td:nth-child(2),
+.table-archive td:nth-child(2) {
+  /* Developer - same width as name, wider than before */
+  width: 28% !important;
+  min-width: 140px !important;
+}
+
 .table-archive th:nth-child(3),
-.table-archive td:nth-child(3),
+.table-archive td:nth-child(3) {
+  /* Units - take some width away */
+  width: 10% !important;
+  min-width: 70px !important;
+}
+
 .table-archive th:nth-child(4),
-.table-archive td:nth-child(4),
+.table-archive td:nth-child(4) {
+  /* Scope - keep moderate width */
+  width: 18% !important;
+  min-width: 90px !important;
+}
+
 .table-archive th:nth-child(5),
 .table-archive td:nth-child(5) {
-  width: 17% !important;
+  /* Date - slightly narrower to give room to name/developer */
+  width: 16% !important;
   min-width: 90px !important;
 }
 

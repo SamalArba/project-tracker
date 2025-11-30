@@ -105,14 +105,15 @@ export default function Signed() {
   const totalRemaining = sumNumeric(sorted.map(r => r.remaining))
   const totalUnits = sorted.reduce((acc, r) => acc + (r.units ?? 0), 0)
 
+  // Format amounts with ILS symbol on the *right* side (e.g. "1,000 ₪")
   const formatAmount = (n: number) =>
-    n > 0 ? `₪ ${n.toLocaleString('he-IL')}` : '—'
+    n > 0 ? `${n.toLocaleString('he-IL')} ₪` : '—'
 
   const formatCurrencyCell = (v: string | null) => {
     if (v == null || v === '') return '—'
     const n = Number(String(v).replace(/[^0-9.-]/g, ''))
-    if (!Number.isFinite(n) || n === 0) return `₪ ${v}`
-    return `₪ ${n.toLocaleString('he-IL')}`
+    if (!Number.isFinite(n) || n === 0) return `${v} ₪`
+    return `${n.toLocaleString('he-IL')} ₪`
   }
 
   const rowsWithTotal: Row[] = [
@@ -218,7 +219,7 @@ export default function Signed() {
           },
           { 
             key: 'startDate', 
-            label: 'תאריך התחלה', 
+            label: 'תאריך', 
             render: r => fmtDate(r.startDate) 
           },
         ]}
