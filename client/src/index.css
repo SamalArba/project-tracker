@@ -554,7 +554,7 @@ body::before {
 /* Signed table specific column widths (different structure than Negotiation) */
 /* Columns in Signed: Project, Developer, Units, Standard, Scope, Execution, Remaining, Date */
 
-/* Project name column - same width as developer */
+/* Project name column */
 .table-signed th:nth-child(1),
 .table-signed td:nth-child(1) {
   width: 18% !important;
@@ -607,8 +607,8 @@ body::before {
 
 .table-signed th:nth-child(8),
 .table-signed td:nth-child(8) {
-  /* Date column - compact, dates don't need much space */
-  width: 4% !important;
+  /* Date column - slightly wider than original */
+  width: 5% !important;
   min-width: 70px !important;
 }
 
