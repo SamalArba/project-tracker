@@ -164,7 +164,7 @@ export default function Negotiation() {
     { key: 'status', label: 'סטטוס', getValue: (r: Row) => fmtStatus(r.status) },
     { key: 'lastTaskTitle', label: 'משימה אחרונה', getValue: (r: Row) => r.lastTaskTitle ?? '—' },
     { key: 'lastHandlerName', label: 'שם המטפל', getValue: (r: Row) => r.lastHandlerName ?? '—' },
-    { key: 'lastTaskDate', label: 'תאריך משימה', getValue: (r: Row) => fmtDate(r.lastTaskDate) }
+    { key: 'lastTaskDate', label: 'תאריך', getValue: (r: Row) => fmtDate(r.lastTaskDate) }
   ]
 
   // ========== RENDER ==========
@@ -227,12 +227,12 @@ export default function Negotiation() {
             },
             { 
               key: 'lastHandlerName', 
-              label: 'שם המטפל', 
+              label: 'אחראי', 
               render: r => r.lastHandlerName ?? '—' 
             },
             { 
               key: 'lastTaskDate', 
-              label: 'תאריך משימה', 
+              label: 'תאריך', 
               render: r => fmtDate(r.lastTaskDate) 
             },
           ]}

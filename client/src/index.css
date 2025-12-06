@@ -533,21 +533,21 @@ body::before {
 .table th:nth-child(5),
 .table td:nth-child(5) {
   /* Last task column - more space for task descriptions */
-  width: 14%;
+  width: 18%;
   min-width: 180px;
 }
 
 .table th:nth-child(6),
 .table td:nth-child(6) {
   /* Handler name column - compact for names */
-  width: 8%;
+  width: 6%;
   min-width: 100px;
 }
 
 .table th:nth-child(7),
 .table td:nth-child(7) {
   /* Date column - compact for dates */
-  width: 9%;
+  width: 7%;
   min-width: 110px;
 }
 
@@ -841,29 +841,33 @@ body::before {
   border: 1px solid transparent;
 }
 
-/* Status variants (progressively darker blue) */
+/* Status variants (progressively darker blue with stronger contrast) */
 .status--active {
-  background: rgba(170, 205, 255, .28);
-  border-color: #9cc3ff;
-  color: #eef4ff;
+  /* Very light */
+  background: rgba(195, 223, 255, .40);
+  border-color: #aed1ff;
+  color: #f4f7ff;
 }
 
 .status--on-hold {
-  background: rgba(100, 150, 255, .40);
-  border-color: #6e96ff;
-  color: #e5ecff;
+  /* Step 2: clearly darker than ACTIVE */
+  background: rgba(120, 175, 255, .75);
+  border-color: #5f99ff;
+  color: #f4f7ff;
 }
 
 .status--completed {
-  background: rgba(50, 95, 255, .52);
-  border-color: #4a69ff;
-  color: #dfe6ff;
+  /* Step 3: strong medium‑deep blue */
+  background: rgba(60, 115, 245, .88);
+  border-color: #2f63ff;
+  color: #edf2ff;
 }
 
 .status--quote {
-  background: rgba(30, 75, 245, .60);
-  border-color: #274ee6;
-  color: #eaf0ff;
+  /* Darkest – slightly softened navy so it's not too harsh */
+  background: rgba(12, 28, 80, .90);
+  border-color: #132760;
+  color: #f6f7ff;
 }
 
 /* ================================================================
