@@ -526,7 +526,7 @@ body::before {
 .table th:nth-child(4),
 .table td:nth-child(4) {
   /* Status column - extra width to prevent Hebrew text from being cut */
-  width: 18%;
+  width: 16%;
   min-width: 200px;
 }
 
@@ -547,7 +547,7 @@ body::before {
 .table th:nth-child(7),
 .table td:nth-child(7) {
   /* Date column - compact for dates */
-  width: 7%;
+  width: 9%;
   min-width: 110px;
 }
 
@@ -571,7 +571,7 @@ body::before {
 /* Units column - take a bit of space away */
 .table-signed th:nth-child(3),
 .table-signed td:nth-child(3) {
-  width: 5% !important;
+  width: 4% !important;
   min-width: 70px !important;
 }
 
@@ -595,7 +595,7 @@ body::before {
 .table-signed th:nth-child(7),
 .table-signed td:nth-child(7) {
   /* Execution & Remaining columns - numeric and compact */
-  width: 4% !important;
+  width: 5% !important;
   min-width: 80px !important;
 }
 
@@ -832,7 +832,7 @@ body::before {
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  width: 200px; /* Unified width for consistency */
+  width: 160px; /* Slightly smaller for a subtler frame */
   text-align: center;
   white-space: nowrap;
   border-radius: 999px;
