@@ -841,7 +841,7 @@ export default function ProjectDetails() {
               </div>
               <div className="grid2">
                 <div>
-                  <label className="label">שם מטפל</label>
+                  <label className="label">אחראי</label>
                   <input 
                     className="input" 
                     value={aName} 
@@ -893,7 +893,7 @@ export default function ProjectDetails() {
             <thead>
               <tr>
                 <th>כותרת</th>
-                <th>שם מטפל</th>
+                <th>אחראי</th>
                 <th>יעד</th>
                 <th>הערות</th>
                 <th>נוצר</th>

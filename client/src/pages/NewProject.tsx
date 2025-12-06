@@ -507,7 +507,7 @@ export default function NewProject() {
             />
             <input 
               className="input" 
-              placeholder="שם מטפל"
+              placeholder="אחראי"
               value={taskAssigneeName} 
               onChange={e => setTaskAssigneeName(e.target.value)} 
             />
